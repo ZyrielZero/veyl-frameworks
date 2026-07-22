@@ -65,7 +65,9 @@
           {{#each this.items}}
           <li class="item collapsible collapsed" data-item-id="{{this.id}}" data-entry-id="{{this.id}}" data-item-name="{{this.name}}" data-uuid="{{this.uuid}}">
             <div class="item-row draggable">
-              <div class="item-name item-action rollable">
+              {{!-- dnd5e-inventory binds clicks only to .item-action[data-action] and
+                    [data-context-menu]; without these attributes the row is inert. --}}
+              <div class="item-name item-action rollable" data-action="edit">
                 <img class="item-image gold-icon" src="{{this.img}}" alt="">
                 <div class="name name-stacked">
                   <span class="title">{{this.name}}</span>
@@ -75,7 +77,7 @@
               <div class="item-detail veyl-col">{{this.cost}}</div>
               <div class="item-detail veyl-col"><span class="condensed">{{this.time}}</span></div>
               <div class="item-detail item-controls always-visible veyl-col">
-                <button type="button" class="unbutton config-button item-control always-interactive" aria-label="{{localize 'DND5E.AdditionalControls'}}">
+                <button type="button" class="unbutton config-button item-control always-interactive" data-context-menu="" aria-label="{{localize 'DND5E.AdditionalControls'}}">
                   <i class="fa-solid fa-ellipsis-vertical"></i>
                 </button>
               </div>
