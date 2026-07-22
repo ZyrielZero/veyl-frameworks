@@ -1,0 +1,96 @@
+/**
+ * Part context for the Magecraft and Arts tabs.
+ *
+ * All values here are DERIVED, never stored, per the spec's identity item schema:
+ * MP max, DC, attack, unlocked step, ready hand are computed from actor level
+ * and the chosen ability every render.
+ */
+
+import { LEGAL_DISCIPLINES } from "./models.mjs";
+
+export const MODULE_ID = "veyl-frameworks";
+
+export const FRAMEWORK_TABS = [
+  { id: "magecraft", label: "VEYL.Magecraft", icon: "fas fa-hand-sparkles" },
+  { id: "arts", label: "VEYL.Arts", icon: "fas fa-hand-fist" }
+];
+
+/** Stance hold by level band (1-4 / 5-9 / 10-14 / 15-19 / 20). */
+function stanceHold(level) {
+  if (level >= 20) return 3;
+  if (level >= 10) return 2;
+  return 1;
+}
+
+/** Highest unlocked step by character level (steps unlock at 1,3,5,...,17). */
+function unlockedStep(level) {
+  return Math.min(9, Math.floor((level + 1) / 2));
+}
+
+export function frameworkItems(actor) {
+  return actor.items.filter(i => i.type === `${MODULE_ID}.framework`);
+}
+
+export function identityFor(actor, framework) {
+  return frameworkItems(actor).find(i => i.system.framework === framework) ?? null;
+}
+
+export function abilityItemsFor(actor, framework) {
+  return actor.items.filter(
+    i => i.type === `${MODULE_ID}.ability` && i.system.framework === framework
+  );
+}
+
+/**
+ * Build the render context for one framework tab. Returns { held: false } when
+ * the actor does not hold that framework's identity item; the template renders
+ * nothing and visibility enforcement hides the tab entirely.
+ */
+export function prepareFrameworkContext(sheet, partId) {
+  const actor = sheet.actor ?? sheet.document;
+  const identity = identityFor(actor, partId);
+  if (!identity) return { held: false, framework: partId };
+
+  const abl = identity.system.ability;
+  // NOTE (carried flag from the spec): system.abilities[abl].mod reflects
+  // Active Effects. The rules require the BASE modifier for the MP formula,
+  // unmodified by items or Attunement. No Attunement effect exists yet, so
+  // this is currently correct; when Attunement becomes an Active Effect, the
+  // engine phase must switch this to the raw score or subtract the effect.
+  const mod = actor.system.abilities?.[abl]?.mod ?? 0;
+  const prof = actor.system.attributes?.prof ?? 0;
+  const level = actor.system.details?.level ?? 1;
+
+  const abilityCfg = CONFIG.DND5E?.abilities?.[abl];
+  const context = {
+    held: true,
+    framework: partId,
+    identity,
+    craftName: identity.system.craftName || identity.name,
+    abilityAbbr: (abilityCfg?.abbreviation ?? abl).toUpperCase(),
+    abilityLabel: abilityCfg?.label ?? abl,
+    attack: (prof + mod >= 0 ? "+" : "") + (prof + mod),
+    dc: 8 + prof + mod,
+    unlockedStep: unlockedStep(level),
+    sections: LEGAL_DISCIPLINES[partId].map(d => ({
+      id: d,
+      label: `VEYL.Discipline.${d}`,
+      items: abilityItemsFor(actor, partId).filter(i => i.system.discipline === d)
+    }))
+  };
+
+  if (partId === "magecraft") {
+    const max = (level * 3) + (mod * level) + prof + 5;
+    // Current MP tracking is engine-phase work; the scaffold displays max/max.
+    context.mp = { value: max, max };
+  } else {
+    const techniques = abilityItemsFor(actor, partId).filter(
+      i => ["boost", "strike"].includes(i.system.discipline)
+    ).length;
+    // Live ready/spent tracking is engine-phase work; the scaffold shows the
+    // hand as techniques known minus the Stance hold for the level band.
+    context.hand = Math.max(0, techniques - stanceHold(level));
+  }
+
+  return context;
+}

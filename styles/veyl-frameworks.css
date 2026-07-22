@@ -1,0 +1,18 @@
+/* Veyl Frameworks scaffold styles.
+ * Native dnd5e class names carry almost all styling by design (spike finding).
+ * The replicated search-bar styles from the spec land here in Phase 3, only if
+ * mounting the real item-list-controls element fails. */
+
+.veyl-hidden {
+  display: none !important;
+}
+
+.veyl-pill {
+  cursor: pointer;
+}
+
+.veyl-empty {
+  padding: 6px 12px;
+  font-style: italic;
+  opacity: 0.6;
+}

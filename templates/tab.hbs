@@ -1,0 +1,77 @@
+{{!--
+  One parameterized template serving both framework tabs (spec: try one first,
+  split only if the layouts diverge). Structure mirrors the native Spells tab
+  skeleton verified by the spike; native dnd5e class names are reused
+  deliberately to inherit system styling.
+--}}
+<section class="tab veyl-tab {{framework}}" data-group="primary" data-tab="{{framework}}">
+  {{#if held}}
+  <section class="top">
+    <div class="spellcasting card veyl-card">
+      <div class="header">
+        <h3>{{craftName}}</h3>
+      </div>
+      <div class="info">
+        <div class="ability">
+          <span class="label">{{localize "VEYL.Ability"}}</span>
+          <span class="value">{{abilityAbbr}}</span>
+        </div>
+        <div class="attack">
+          <span class="label">{{localize "VEYL.Attack"}}</span>
+          <span class="value">{{attack}}</span>
+        </div>
+        <div class="save">
+          <span class="label">{{localize "VEYL.SaveDC"}}</span>
+          <span class="value">{{dc}}</span>
+        </div>
+        {{#if mp}}
+        <div class="mana">
+          <span class="label">{{localize "VEYL.Mana"}}</span>
+          <span class="value">{{mp.value}} / {{mp.max}}</span>
+        </div>
+        {{else}}
+        <div class="hand">
+          <span class="label">{{localize "VEYL.ReadyHand"}}</span>
+          <span class="value">{{hand}}</span>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+  </section>
+
+  {{!-- Search bar lands in Phase 3 (item-list-controls reuse attempt first). --}}
+
+  <section class="items-list spells-list veyl-list">
+    {{#each sections}}
+    <div class="items-section card" data-discipline="{{this.id}}">
+      <div class="items-header header">
+        <h3 class="item-name">{{localize this.label}}</h3>
+        <div class="item-header item-detail">{{#if ../mp}}{{localize "VEYL.Cost"}}{{else}}{{localize "VEYL.Step"}}{{/if}}</div>
+        <div class="item-header item-detail">{{localize "VEYL.Time"}}</div>
+        <div class="item-header item-controls"></div>
+      </div>
+      <ol class="item-list unlist">
+        {{#each this.items}}
+        <li class="item collapsible" data-item-id="{{this.id}}">
+          <div class="item-row">
+            <div class="item-name">
+              <img class="gold-icon" src="{{this.img}}" alt="">
+              <div class="name-stacked">
+                <span class="title">{{this.name}}</span>
+                <span class="subtitle">{{this.system.trigger}}</span>
+              </div>
+            </div>
+            <div class="item-detail">{{this.system.comparableLevel}}</div>
+            <div class="item-detail">{{this.system.activation}}</div>
+            <div class="item-controls"></div>
+          </div>
+        </li>
+        {{else}}
+        <li class="item veyl-empty">{{localize "VEYL.EmptySection"}}</li>
+        {{/each}}
+      </ol>
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+</section>

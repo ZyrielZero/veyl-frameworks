@@ -1,0 +1,25 @@
+{
+  "TYPES.Item.veyl-frameworks.framework": "Framework Identity",
+  "TYPES.Item.veyl-frameworks.ability": "Framework Ability",
+
+  "VEYL.Magecraft": "Magecraft",
+  "VEYL.Arts": "Arts",
+  "VEYL.Ability": "Ability",
+  "VEYL.Attack": "Attack",
+  "VEYL.SaveDC": "Save DC",
+  "VEYL.Mana": "Mana",
+  "VEYL.ReadyHand": "Ready Hand",
+  "VEYL.Cost": "Cost",
+  "VEYL.Step": "Step",
+  "VEYL.Time": "Time",
+  "VEYL.EmptySection": "None known",
+
+  "VEYL.Discipline.echo": "Echo",
+  "VEYL.Discipline.augment": "Augments",
+  "VEYL.Discipline.channel": "Channels",
+  "VEYL.Discipline.surge": "Surge",
+  "VEYL.Discipline.stance": "Stance",
+  "VEYL.Discipline.boost": "Boosts",
+  "VEYL.Discipline.strike": "Strikes",
+  "VEYL.Discipline.apex": "Apex"
+}
