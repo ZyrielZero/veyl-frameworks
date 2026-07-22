@@ -2,7 +2,7 @@
   "id": "veyl-frameworks",
   "title": "Veyl Frameworks",
   "description": "Character sheet support for the Magecraft and Arts frameworks of Veyl: framework tabs, identity pills, and custom item types.",
-  "version": "0.2.0",
+  "version": "0.3.0-rc.1",
   "authors": [{ "name": "ZyrielZero" }],
   "compatibility": {
     "minimum": "13",
@@ -37,5 +37,5 @@
   ],
   "url": "https://github.com/ZyrielZero/veyl-frameworks",
   "manifest": "https://github.com/ZyrielZero/veyl-frameworks/releases/latest/download/module.json",
-  "download": "https://github.com/ZyrielZero/veyl-frameworks/releases/download/v0.2.0/veyl-frameworks.zip"
+  "download": "https://github.com/ZyrielZero/veyl-frameworks/releases/download/v0.3.0-rc.1/veyl-frameworks.zip"
 }
