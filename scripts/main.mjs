@@ -10,6 +10,7 @@ import { FrameworkData, AbilityData } from "./models.mjs";
 import { MODULE_ID, FRAMEWORK_TABS, prepareFrameworkContext } from "./tab.mjs";
 import { onRenderCharacterSheet } from "./pill.mjs";
 import { registerVeylSheets } from "./item-sheets.mjs";
+import { onRenderChatMessage } from "./chat.mjs";
 
 /** Spec's "small verification task": the exact path to the sheet class. */
 const SHEET_CLASS_PATH = "dnd5e.applications.actor.CharacterActorSheet";
@@ -78,4 +79,7 @@ Hooks.once("init", () => {
 
   // 5. Pill injection and tab visibility on every render.
   Hooks.on("renderCharacterActorSheet", onRenderCharacterSheet);
+
+  // 6. Chat card button wiring (Phase 3). Our cards only; guarded by flag.
+  Hooks.on("renderChatMessageHTML", onRenderChatMessage);
 });

@@ -45,7 +45,7 @@ const TIME_ABBR = { action: "A", bonus: "BA", reaction: "R", none: "\u2013" };
  * Cost displayed per discipline. Base costs only for now: empowerment display
  * is Phase 3 work, and the Apex spends the whole ready hand.
  */
-function displayCost(discipline, level) {
+export function displayCost(discipline, level) {
   switch (discipline) {
     case "echo": return echoReserve(level);
     case "augment":

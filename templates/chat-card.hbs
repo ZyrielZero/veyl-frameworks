@@ -1,0 +1,50 @@
+{{!--
+  Read-only ability chat card (Phase 3).
+
+  The dnd5e2 chat-card classes buy the native card styling (dnd5e scopes its
+  chat CSS to them), but none of dnd5e's button wiring is used: our subtypes
+  have no activities, so the attack button carries our own data-action in the
+  veyl namespace and is bound by chat.mjs via the renderChatMessageHTML hook.
+  Every number here was derived at post time; nothing is stored beyond the
+  item uuid pointer in the message flags.
+--}}
+<div class="dnd5e2 chat-card veyl-chat-card">
+    <section class="card-header">
+        <header class="summary">
+            <img class="gold-icon" src="{{img}}" alt="{{name}}">
+            <div class="name-stacked border">
+                <span class="title">{{name}}</span>
+                <span class="subtitle">{{subtitle}}</span>
+            </div>
+        </header>
+    </section>
+    <section class="card-content">
+        <div class="veyl-summary-meta">
+            <span class="veyl-meta">{{costLabel}}</span>
+            {{#if summary.activationLabel}}<span class="veyl-meta">{{summary.activationLabel}}</span>{{/if}}
+            {{#if summary.trigger}}<span class="veyl-meta">{{localize "VEYL.Trigger"}}: {{summary.trigger}}</span>{{/if}}
+            {{#if summary.duration}}<span class="veyl-meta">{{summary.duration}}</span>{{/if}}
+            {{#if summary.concentration}}<span class="veyl-meta veyl-conc">{{localize "VEYL.Field.concentration"}}</span>{{/if}}
+        </div>
+        {{#if summary.rich}}<div class="veyl-summary-text">{{{summary.rich}}}</div>{{/if}}
+        {{#if summary.amplifyRich}}
+        <div class="veyl-line veyl-amplify">
+            <strong>{{localize "VEYL.Field.amplify"}}:</strong>
+            <div class="veyl-inline-rich">{{{summary.amplifyRich}}}</div>
+        </div>
+        {{/if}}
+    </section>
+    {{#if isAttack}}
+    <footer class="card-buttons">
+        <button type="button" data-action="veyl-attack">
+            <i class="fa-solid fa-dice-d20" inert></i>
+            {{localize "VEYL.AttackRoll"}} {{attackBonus}}
+        </button>
+    </footer>
+    {{/if}}
+    {{#if isSave}}
+    <footer class="card-footer">
+        <p class="veyl-save-line">{{saveLine}}</p>
+    </footer>
+    {{/if}}
+</div>

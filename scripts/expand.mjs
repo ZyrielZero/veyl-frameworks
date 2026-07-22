@@ -9,6 +9,8 @@
  * replaced), so binding once with a dataset guard survives every re-render.
  */
 
+import { onPostCard } from "./chat.mjs";
+
 export function bindTabInteractions(app, element) {
   if (element.dataset.veylBound) return;
   element.dataset.veylBound = "1";
@@ -18,6 +20,12 @@ export function bindTabInteractions(app, element) {
     if (toggle && toggle.closest(".veyl-tab")) {
       event.stopPropagation();
       onToggleExpand(app, toggle);
+      return;
+    }
+    const post = event.target.closest("[data-veyl-post]");
+    if (post && post.closest(".veyl-tab")) {
+      event.stopPropagation();
+      onPostCard(app, post);
     }
   });
 }
