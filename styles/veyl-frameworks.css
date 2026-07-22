@@ -1,7 +1,29 @@
-/* Veyl Frameworks scaffold styles.
- * Native dnd5e class names carry almost all styling by design (spike finding).
- * The replicated search-bar styles from the spec land here in Phase 3, only if
- * mounting the real item-list-controls element fails. */
+/* Veyl Frameworks styles.
+ * The search bar has NO styles here on purpose: it is dnd5e's own
+ * <item-list-controls> element inside a <dnd5e-inventory> wrapper, so the
+ * system stylesheet renders it identically to the native tabs. Only the
+ * layout of the framework tab itself is ours. */
+
+.veyl-tab {
+  flex-direction: column;
+}
+
+.veyl-tab .top {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.veyl-tab .spellcasting.card {
+  width: 240px;
+  flex: 0 1 auto;
+}
+
+.veyl-tab .veyl-col {
+  width: 50px;
+  text-align: center;
+}
 
 .veyl-hidden {
   display: none !important;
@@ -11,7 +33,7 @@
   cursor: pointer;
 }
 
-.veyl-empty {
+.veyl-empty .subtitle {
   padding: 6px 12px;
   font-style: italic;
   opacity: 0.6;

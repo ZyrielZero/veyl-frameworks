@@ -22,6 +22,36 @@ function stanceHold(level) {
   return 1;
 }
 
+/** Echo reservation by level band (per the Magecraft reservation table). */
+function echoReserve(level) {
+  if (level >= 20) return 25;
+  if (level >= 15) return 20;
+  if (level >= 10) return 15;
+  if (level >= 5) return 10;
+  return 5;
+}
+
+/** Activation displayed in the Time column. */
+const TIME_ABBR = { action: "A", bonus: "BA", reaction: "R", none: "\u2013" };
+
+/**
+ * Cost displayed per discipline. Base costs only for now: empowerment display
+ * is Phase 3 work, and the Apex spends the whole ready hand.
+ */
+function displayCost(discipline, level) {
+  switch (discipline) {
+    case "echo": return echoReserve(level);
+    case "augment":
+    case "channel": return 2;
+    case "surge": return 15;
+    case "stance": return stanceHold(level);
+    case "boost":
+    case "strike": return 1;
+    case "apex": return game.i18n.localize("VEYL.All");
+    default: return "\u2013";
+  }
+}
+
 /** Highest unlocked step by character level (steps unlock at 1,3,5,...,17). */
 function unlockedStep(level) {
   return Math.min(9, Math.floor((level + 1) / 2));
@@ -75,7 +105,19 @@ export function prepareFrameworkContext(sheet, partId) {
     sections: LEGAL_DISCIPLINES[partId].map(d => ({
       id: d,
       label: `VEYL.Discipline.${d}`,
-      items: abilityItemsFor(actor, partId).filter(i => i.system.discipline === d)
+      items: abilityItemsFor(actor, partId)
+        .filter(i => i.system.discipline === d)
+        .map(i => ({
+          id: i.id,
+          uuid: i.uuid,
+          name: i.name,
+          img: i.img,
+          subtitle: i.system.trigger
+            ? `${game.i18n.localize("VEYL.Trigger")}: ${i.system.trigger}`
+            : `${game.i18n.localize("VEYL.CSL")} ${i.system.comparableLevel}`,
+          cost: displayCost(d, level),
+          time: TIME_ABBR[i.system.activation] ?? i.system.activation
+        }))
     }))
   };
 

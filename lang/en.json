@@ -1,7 +1,6 @@
 {
   "TYPES.Item.veyl-frameworks.framework": "Framework Identity",
   "TYPES.Item.veyl-frameworks.ability": "Framework Ability",
-
   "VEYL.Magecraft": "Magecraft",
   "VEYL.Arts": "Arts",
   "VEYL.Ability": "Ability",
@@ -13,7 +12,6 @@
   "VEYL.Step": "Step",
   "VEYL.Time": "Time",
   "VEYL.EmptySection": "None known",
-
   "VEYL.Discipline.echo": "Echo",
   "VEYL.Discipline.augment": "Augments",
   "VEYL.Discipline.channel": "Channels",
@@ -21,5 +19,9 @@
   "VEYL.Discipline.stance": "Stance",
   "VEYL.Discipline.boost": "Boosts",
   "VEYL.Discipline.strike": "Strikes",
-  "VEYL.Discipline.apex": "Apex"
+  "VEYL.Discipline.apex": "Apex",
+  "VEYL.SearchAbilities": "Search abilities",
+  "VEYL.Trigger": "Trigger",
+  "VEYL.CSL": "CSL",
+  "VEYL.All": "All"
 }

@@ -1,8 +1,17 @@
 {{!--
-  One parameterized template serving both framework tabs (spec: try one first,
-  split only if the layouts diverge). Structure mirrors the native Spells tab
-  skeleton verified by the spike; native dnd5e class names are reused
-  deliberately to inherit system styling.
+  One parameterized template serving both framework tabs.
+
+  The search bar and list structure reuse dnd5e's own custom elements rather
+  than imitating them (live-session finding, 2026-07-21): <item-list-controls>
+  builds its native search UI, and it resolves its target list via
+  [data-item-list="<for>"] from inside a <dnd5e-inventory> ancestor, with the
+  list as a SIBLING of div.middle (nesting the list inside .middle stretches
+  the bar in the flex row). Rows carry data-item-name for the element's name
+  filter, plus data-item-id / data-entry-id / data-uuid per dnd5e convention.
+
+  The active class on the root section MUST be rendered from context:
+  ApplicationV2's changeTab no-ops when its state already matches, so a
+  re-render that drops the class leaves the open tab blank.
 --}}
 <section class="tab veyl-tab {{framework}} {{#if tab.active}}active{{/if}}" data-group="primary" data-tab="{{framework}}">
   {{#if held}}
@@ -25,12 +34,12 @@
           <span class="value">{{dc}}</span>
         </div>
         {{#if mp}}
-        <div class="mana">
+        <div class="prepared">
           <span class="label">{{localize "VEYL.Mana"}}</span>
-          <span class="value">{{mp.value}} / {{mp.max}}</span>
+          <span class="value">{{mp.value}}/{{mp.max}}</span>
         </div>
         {{else}}
-        <div class="hand">
+        <div class="prepared">
           <span class="label">{{localize "VEYL.ReadyHand"}}</span>
           <span class="value">{{hand}}</span>
         </div>
@@ -39,39 +48,52 @@
     </div>
   </section>
 
-  {{!-- Search bar lands in Phase 3 (item-list-controls reuse attempt first). --}}
-
-  <section class="items-list spells-list veyl-list">
-    {{#each sections}}
-    <div class="items-section card" data-discipline="{{this.id}}">
-      <div class="items-header header">
-        <h3 class="item-name">{{localize this.label}}</h3>
-        <div class="item-header item-detail">{{#if ../mp}}{{localize "VEYL.Cost"}}{{else}}{{localize "VEYL.Step"}}{{/if}}</div>
-        <div class="item-header item-detail">{{localize "VEYL.Time"}}</div>
-        <div class="item-header item-controls"></div>
-      </div>
-      <ol class="item-list unlist">
-        {{#each this.items}}
-        <li class="item collapsible" data-item-id="{{this.id}}">
-          <div class="item-row">
-            <div class="item-name">
-              <img class="gold-icon" src="{{this.img}}" alt="">
-              <div class="name-stacked">
-                <span class="title">{{this.name}}</span>
-                <span class="subtitle">{{this.system.trigger}}</span>
+  <dnd5e-inventory class="inventory-element">
+    <div class="middle">
+      <item-list-controls for="{{framework}}" collection="items" label="{{localize 'VEYL.SearchAbilities'}}" keep-empty=""></item-list-controls>
+    </div>
+    <section class="items-list spells-list veyl-list" data-item-list="{{framework}}">
+      {{#each sections}}
+      <div class="items-section card" data-discipline="{{this.id}}">
+        <div class="items-header header">
+          <h3 class="item-name">{{localize this.label}}</h3>
+          <div class="item-header veyl-col">{{localize "VEYL.Cost"}}</div>
+          <div class="item-header veyl-col">{{localize "VEYL.Time"}}</div>
+          <div class="item-header veyl-col"></div>
+        </div>
+        <ol class="item-list unlist">
+          {{#each this.items}}
+          <li class="item collapsible collapsed" data-item-id="{{this.id}}" data-entry-id="{{this.id}}" data-item-name="{{this.name}}" data-uuid="{{this.uuid}}">
+            <div class="item-row draggable">
+              <div class="item-name item-action rollable">
+                <img class="item-image gold-icon" src="{{this.img}}" alt="">
+                <div class="name name-stacked">
+                  <span class="title">{{this.name}}</span>
+                  <span class="subtitle">{{this.subtitle}}</span>
+                </div>
+              </div>
+              <div class="item-detail veyl-col">{{this.cost}}</div>
+              <div class="item-detail veyl-col"><span class="condensed">{{this.time}}</span></div>
+              <div class="item-detail item-controls always-visible veyl-col">
+                <button type="button" class="unbutton config-button item-control always-interactive" aria-label="{{localize 'DND5E.AdditionalControls'}}">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
               </div>
             </div>
-            <div class="item-detail">{{this.system.comparableLevel}}</div>
-            <div class="item-detail">{{this.system.activation}}</div>
-            <div class="item-controls"></div>
-          </div>
-        </li>
-        {{else}}
-        <li class="item veyl-empty">{{localize "VEYL.EmptySection"}}</li>
-        {{/each}}
-      </ol>
-    </div>
-    {{/each}}
-  </section>
+          </li>
+          {{else}}
+          <li class="item veyl-empty">
+            <div class="item-row">
+              <div class="item-name">
+                <div class="name name-stacked"><span class="subtitle">{{localize "VEYL.EmptySection"}}</span></div>
+              </div>
+            </div>
+          </li>
+          {{/each}}
+        </ol>
+      </div>
+      {{/each}}
+    </section>
+  </dnd5e-inventory>
   {{/if}}
 </section>
