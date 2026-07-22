@@ -63,11 +63,14 @@
         </div>
         <ol class="item-list unlist">
           {{#each this.items}}
-          <li class="item collapsible collapsed" data-item-id="{{this.id}}" data-entry-id="{{this.id}}" data-item-name="{{this.name}}" data-uuid="{{this.uuid}}">
+          <li class="item veyl-collapsible {{#unless this.expanded}}veyl-collapsed{{/unless}}" data-item-id="{{this.id}}" data-entry-id="{{this.id}}" data-item-name="{{this.name}}" data-uuid="{{this.uuid}}">
             <div class="item-row draggable">
               {{!-- dnd5e-inventory binds clicks only to .item-action[data-action] and
-                    [data-context-menu]; without these attributes the row is inert. --}}
-              <div class="item-name item-action rollable" data-action="edit">
+                    [data-context-menu]. In Edit mode the name keeps dnd5e's edit
+                    action (opens the sheet); in Play mode it carries our own
+                    toggle marker instead, which dnd5e ignores and expand.mjs
+                    handles by delegation. --}}
+              <div class="item-name item-action rollable" {{#if @root.editMode}}data-action="edit"{{else}}data-veyl-toggle=""{{/if}}>
                 <img class="item-image gold-icon" src="{{this.img}}" alt="">
                 <div class="name name-stacked">
                   <span class="title">{{this.name}}</span>
@@ -82,6 +85,50 @@
                 </button>
               </div>
             </div>
+            {{#with this.summary}}
+            <div class="veyl-summary">
+              <div class="veyl-summary-meta">
+                {{#if this.activationLabel}}<span class="veyl-meta">{{this.activationLabel}}</span>{{/if}}
+                {{#if this.trigger}}<span class="veyl-meta">{{localize "VEYL.Trigger"}}: {{this.trigger}}</span>{{/if}}
+                {{#if this.duration}}<span class="veyl-meta">{{this.duration}}</span>{{/if}}
+                {{#if this.concentration}}<span class="veyl-meta veyl-conc">{{localize "VEYL.Field.concentration"}}</span>{{/if}}
+              </div>
+              {{#if this.rich}}<div class="veyl-summary-text">{{{this.rich}}}</div>{{/if}}
+              {{#if this.ladder}}
+              <div class="veyl-ladder" aria-label="{{localize 'VEYL.Summary.Ladder'}}">
+                {{#each this.ladder}}
+                <span class="veyl-ladder-step {{#if this.threshold}}veyl-threshold{{/if}}">
+                  <span class="step">{{this.step}}</span>
+                  <span class="cost">{{this.cost}}</span>
+                </span>
+                {{/each}}
+                <span class="veyl-ladder-unit">{{this.costUnit}}</span>
+              </div>
+              {{#if this.perStep}}
+              <p class="veyl-line"><strong>{{localize "VEYL.Field.perStep"}}:</strong> {{this.perStep}}</p>
+              {{/if}}
+              {{/if}}
+              {{#each this.evolutions}}
+              <div class="veyl-line veyl-evolution">
+                <strong>{{localize "VEYL.ThresholdStep" step=this.step}}:</strong>
+                <div class="veyl-inline-rich">{{{this.enriched}}}</div>
+              </div>
+              {{/each}}
+              {{#if this.fixed}}<p class="veyl-line veyl-fixed">{{this.fixed}}</p>{{/if}}
+              {{#if this.amplifyRich}}
+              <div class="veyl-line veyl-amplify">
+                <strong>{{localize "VEYL.Field.amplify"}}:</strong>
+                <div class="veyl-inline-rich">{{{this.amplifyRich}}}</div>
+              </div>
+              {{/if}}
+              {{#each this.deepenings}}
+              <div class="veyl-line veyl-deepening">
+                <strong>{{localize "VEYL.DeepeningLevel" level=this.level}}:</strong>
+                <div class="veyl-inline-rich">{{{this.enriched}}}</div>
+              </div>
+              {{/each}}
+            </div>
+            {{/with}}
           </li>
           {{else}}
           <li class="item veyl-empty">
