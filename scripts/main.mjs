@@ -69,7 +69,7 @@ Hooks.once("init", () => {
     async function (wrapped, partId, context, options) {
       context = await wrapped(partId, context, options);
       if (FRAMEWORK_TABS.some(fw => fw.id === partId)) {
-        return foundry.utils.mergeObject(context, prepareFrameworkContext(this, partId));
+        return foundry.utils.mergeObject(context, await prepareFrameworkContext(this, partId));
       }
       return context;
     },

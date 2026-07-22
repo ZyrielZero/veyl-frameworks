@@ -6,7 +6,7 @@
  * and the chosen ability every render.
  */
 
-import { LEGAL_DISCIPLINES } from "./models.mjs";
+import { LEGAL_DISCIPLINES, DISCIPLINE_GROUPS, THRESHOLD_STEPS } from "./models.mjs";
 
 export const MODULE_ID = "veyl-frameworks";
 
@@ -15,15 +15,22 @@ export const FRAMEWORK_TABS = [
   { id: "arts", label: "VEYL.Arts", icon: "fas fa-hand-fist" }
 ];
 
+/**
+ * MP cost by step on the Magecraft cost progression (the rules table in
+ * docs/rules/magecraft.md). Arts spend techniques equal to the step number,
+ * so they need no table.
+ */
+export const MP_COSTS = { 1: 2, 2: 3, 3: 5, 4: 6, 5: 7, 6: 9, 7: 10, 8: 11, 9: 13 };
+
 /** Stance hold by level band (1-4 / 5-9 / 10-14 / 15-19 / 20). */
-function stanceHold(level) {
+export function stanceHold(level) {
   if (level >= 20) return 3;
   if (level >= 10) return 2;
   return 1;
 }
 
 /** Echo reservation by level band (per the Magecraft reservation table). */
-function echoReserve(level) {
+export function echoReserve(level) {
   if (level >= 20) return 25;
   if (level >= 15) return 20;
   if (level >= 10) return 15;
@@ -53,8 +60,98 @@ function displayCost(discipline, level) {
 }
 
 /** Highest unlocked step by character level (steps unlock at 1,3,5,...,17). */
-function unlockedStep(level) {
+export function unlockedStep(level) {
   return Math.min(9, Math.floor((level + 1) / 2));
+}
+
+/**
+ * Derived expansion summary for one ability row (Phase 3). Everything here is
+ * recomputed per render from the item and the actor's level (rule 6); the
+ * chat card builds on the same context.
+ */
+export async function buildAbilitySummary(item, { framework, level }) {
+  const sys = item.system;
+  const group = DISCIPLINE_GROUPS[sys.discipline];
+  const TextEditor = foundry.applications.ux.TextEditor.implementation;
+  const enrich = value => TextEditor.enrichHTML(value ?? "", {
+    secrets: item.isOwner,
+    relativeTo: item,
+    rollData: item.getRollData?.() ?? {}
+  });
+
+  const summary = {
+    group,
+    activationLabel: sys.activation === "none"
+      ? "" : game.i18n.localize(`VEYL.Activation.${sys.activation}`),
+    trigger: sys.trigger,
+    duration: sys.duration,
+    concentration: sys.concentration,
+    // The reserve disciplines are defined by their Signature; everything else
+    // leads with its base effect.
+    rich: await enrich(group === "reserve" ? sys.signature : sys.baseEffect),
+    perStep: (group === "enhance" || group === "active") ? sys.perStep : "",
+    ladder: null,
+    costUnit: "",
+    fixed: null,
+    amplifyRich: group === "climax" ? await enrich(sys.amplify) : "",
+    evolutions: [],
+    deepenings: []
+  };
+
+  // Empowerment ladder: enhance and active disciplines only, base to the
+  // actor's unlocked step, tier thresholds at steps 3/6/9.
+  if (group === "enhance" || group === "active") {
+    const cap = unlockedStep(level);
+    summary.ladder = [];
+    for (let step = 1; step <= cap; step++) {
+      summary.ladder.push({
+        step,
+        cost: framework === "magecraft" ? MP_COSTS[step] : step,
+        threshold: step % 3 === 0
+      });
+    }
+    summary.costUnit = game.i18n.localize(
+      framework === "magecraft" ? "VEYL.MP" : "VEYL.TechniquesSpent"
+    );
+    summary.evolutions = await Promise.all(
+      [...(sys.evolutions ?? [])]
+        .sort((a, b) => a.threshold - b.threshold)
+        .map(async row => ({
+          step: THRESHOLD_STEPS[row.threshold],
+          enriched: await enrich(row.text)
+        }))
+    );
+  }
+
+  // Fixed cost displays: reservation, hold, Surge minimum, Apex spend-all.
+  switch (sys.discipline) {
+    case "echo":
+      summary.fixed = game.i18n.format("VEYL.Summary.Reservation", { mp: echoReserve(level) });
+      break;
+    case "stance": {
+      const hold = stanceHold(level);
+      summary.fixed = game.i18n.format(
+        hold === 1 ? "VEYL.Summary.HoldOne" : "VEYL.Summary.HoldMany", { n: hold }
+      );
+      break;
+    }
+    case "surge":
+      summary.fixed = game.i18n.localize("VEYL.Summary.Surge");
+      break;
+    case "apex":
+      summary.fixed = game.i18n.localize("VEYL.Summary.Apex");
+      break;
+  }
+
+  if (group === "reserve" || group === "climax") {
+    summary.deepenings = await Promise.all(
+      [...(sys.deepenings ?? [])]
+        .sort((a, b) => a.level - b.level)
+        .map(async row => ({ level: row.level, enriched: await enrich(row.text) }))
+    );
+  }
+
+  return summary;
 }
 
 export function frameworkItems(actor) {
@@ -76,10 +173,18 @@ export function abilityItemsFor(actor, framework) {
  * the actor does not hold that framework's identity item; the template renders
  * nothing and visibility enforcement hides the tab entirely.
  */
-export function prepareFrameworkContext(sheet, partId) {
+export async function prepareFrameworkContext(sheet, partId) {
   const actor = sheet.actor ?? sheet.document;
   const identity = identityFor(actor, partId);
   if (!identity) return { held: false, framework: partId };
+
+  // dnd5e sheet mode (MODES.PLAY = 1, MODES.EDIT = 2). In Edit mode a row's
+  // name keeps dnd5e's edit action; in Play mode it becomes our expansion
+  // toggle (see tab.hbs and expand.mjs).
+  const editMode = (sheet._mode ?? 1) === (sheet.constructor.MODES?.EDIT ?? 2);
+  // Expansion state is per sheet instance and in-memory only: never stored on
+  // the actor or item, discarded on reload (Phase 3 statelessness rule).
+  const expanded = sheet._veylExpanded ??= new Set();
 
   const abl = identity.system.ability;
   // NOTE (carried flag from the spec): system.abilities[abl].mod reflects
@@ -96,18 +201,19 @@ export function prepareFrameworkContext(sheet, partId) {
     held: true,
     framework: partId,
     identity,
+    editMode,
     craftName: identity.system.craftName || identity.name,
     abilityAbbr: (abilityCfg?.abbreviation ?? abl).toUpperCase(),
     abilityLabel: abilityCfg?.label ?? abl,
     attack: (prof + mod >= 0 ? "+" : "") + (prof + mod),
     dc: 8 + prof + mod,
     unlockedStep: unlockedStep(level),
-    sections: LEGAL_DISCIPLINES[partId].map(d => ({
+    sections: await Promise.all(LEGAL_DISCIPLINES[partId].map(async d => ({
       id: d,
       label: `VEYL.Discipline.${d}`,
-      items: abilityItemsFor(actor, partId)
+      items: await Promise.all(abilityItemsFor(actor, partId)
         .filter(i => i.system.discipline === d)
-        .map(i => ({
+        .map(async i => ({
           id: i.id,
           uuid: i.uuid,
           name: i.name,
@@ -118,9 +224,11 @@ export function prepareFrameworkContext(sheet, partId) {
             ? `${game.i18n.localize("VEYL.Trigger")}: ${i.system.trigger}`
             : "",
           cost: displayCost(d, level),
-          time: TIME_ABBR[i.system.activation] ?? i.system.activation
-        }))
-    }))
+          time: TIME_ABBR[i.system.activation] ?? i.system.activation,
+          expanded: expanded.has(i.id),
+          summary: await buildAbilitySummary(i, { framework: partId, level })
+        })))
+    })))
   };
 
   if (partId === "magecraft") {
