@@ -65,6 +65,28 @@
             </div>
         </div>
         {{/if}}
+
+        {{#if show.resolution}}
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.resolution"}}</label>
+            <div class="form-fields">
+                <select name="system.resolution">
+                    {{selectOptions resolutionOptions selected=source.resolution valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if show.saveAbility}}
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.saveAbility"}}</label>
+            <div class="form-fields">
+                <select name="system.saveAbility">
+                    {{selectOptions saveAbilityOptions selected=source.saveAbility valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+        {{/if}}
     </fieldset>
 
     {{#if show.signature}}

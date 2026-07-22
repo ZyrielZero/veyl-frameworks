@@ -25,6 +25,27 @@ export const LEGAL_DISCIPLINES = {
 /** The three Rally benefit options (Arts identity only). */
 export const RALLY_BENEFITS = ["brace", "reposition", "readField"];
 
+/**
+ * The four cross-framework discipline pairs. Each pair shares one rule shape,
+ * so the ability sheet renders by group, not by individual discipline:
+ *  - reserve (Echo/Stance): Signature plus Deepenings; sustained by held resources.
+ *  - enhance (Augment/Boost): rides a named trigger; base effect, per step, evolutions.
+ *  - active (Channel/Strike): own activation; reaction plus trigger makes a Counter.
+ *  - climax (Surge/Apex): base effect, Amplify, Masteries (stored as deepenings).
+ */
+export const DISCIPLINE_GROUPS = {
+  echo: "reserve", stance: "reserve",
+  augment: "enhance", boost: "enhance",
+  channel: "active", strike: "active",
+  surge: "climax", apex: "climax"
+};
+
+/** Evolution threshold ordinal (1/2/3) to the step it crosses (3/6/9). */
+export const THRESHOLD_STEPS = { 1: 3, 2: 6, 3: 9 };
+
+/** How an ability resolves when used: no roll, an attack roll, or a save. */
+export const RESOLUTIONS = ["none", "attack", "save"];
+
 /** Levels at which Echoes, Stances, Surges, and Apexes deepen. */
 export const DEEPENING_LEVELS = [10, 15, 20];
 
@@ -112,7 +133,19 @@ export class AbilityData extends foundry.abstract.TypeDataModel {
         }),
         text: new fields.HTMLField({ required: true, initial: "" })
       })),
-      notes: new fields.StringField({ required: true, initial: "" })
+      notes: new fields.StringField({ required: true, initial: "" }),
+      // Phase 3 addition (walked against both rules documents 2026-07-22, no
+      // conflict): how the ability resolves when used. Any resolution is legal
+      // for any discipline (a Signature can force saves), so validateJoint is
+      // untouched. Existing items load with the initial, "none".
+      resolution: new fields.StringField({
+        required: true, blank: false, initial: "none", choices: RESOLUTIONS
+      }),
+      // The targeted save ability; read only when resolution is "save".
+      saveAbility: new fields.StringField({
+        required: true, blank: false, initial: "str",
+        choices: ["str", "dex", "con", "int", "wis", "cha"]
+      })
     };
   }
 

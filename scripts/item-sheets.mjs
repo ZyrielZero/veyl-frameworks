@@ -17,23 +17,9 @@
 
 import { MODULE_ID, FRAMEWORK_TABS } from "./tab.mjs";
 import {
-  LEGAL_ABILITIES, LEGAL_DISCIPLINES, RALLY_BENEFITS, DEEPENING_LEVELS
+  LEGAL_ABILITIES, LEGAL_DISCIPLINES, RALLY_BENEFITS, DEEPENING_LEVELS,
+  DISCIPLINE_GROUPS, THRESHOLD_STEPS, RESOLUTIONS
 } from "./models.mjs";
-
-/**
- * The four cross-framework discipline pairs. Each pair shares one rule shape,
- * so the ability sheet renders by group, not by individual discipline:
- *  - reserve (Echo/Stance): Signature plus Deepenings; sustained by held resources.
- *  - enhance (Augment/Boost): rides a named trigger; base effect, per step, evolutions.
- *  - active (Channel/Strike): own activation; reaction plus trigger makes a Counter.
- *  - climax (Surge/Apex): base effect, Amplify, Masteries (stored as deepenings).
- */
-const DISCIPLINE_GROUPS = {
-  echo: "reserve", stance: "reserve",
-  augment: "enhance", boost: "enhance",
-  channel: "active", strike: "active",
-  surge: "climax", apex: "climax"
-};
 
 /**
  * Rule-fixed activations. Channels and Strikes are absent on purpose: they are
@@ -44,9 +30,6 @@ const FIXED_ACTIVATION = {
   augment: "none", boost: "none",
   surge: "action", apex: "action"
 };
-
-/** Evolution threshold ordinal (1/2/3) to the step it crosses (3/6/9). */
-const THRESHOLD_STEPS = { 1: 3, 2: 6, 3: 9 };
 
 /**
  * Build and register both sheet classes. Called from the init hook in
@@ -234,6 +217,12 @@ export function registerVeylSheets() {
       context.levelOptions = DEEPENING_LEVELS.map(value => ({
         value, label: game.i18n.format("VEYL.DeepeningLevel", { level: value })
       }));
+      context.resolutionOptions = RESOLUTIONS.map(value => ({
+        value, label: game.i18n.localize(`VEYL.Resolution.${value}`)
+      }));
+      context.saveAbilityOptions = ["str", "dex", "con", "int", "wis", "cha"].map(value => ({
+        value, label: CONFIG.DND5E?.abilities?.[value]?.label ?? value
+      }));
 
       // Section visibility per discipline group. A select change submits, the
       // item updates, and the re-render branches here: dnd5e's own conditional
@@ -247,7 +236,9 @@ export function registerVeylSheets() {
         evolutions: group === "enhance" || group === "active",
         signature: group === "reserve",
         amplify: group === "climax",
-        deepenings: group === "reserve" || group === "climax"
+        deepenings: group === "reserve" || group === "climax",
+        resolution: true,
+        saveAbility: sys.resolution === "save"
       };
       context.groupHint = `VEYL.Hint.${group}`;
 
