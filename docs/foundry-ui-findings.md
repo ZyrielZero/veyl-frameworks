@@ -100,6 +100,15 @@ All verified live against the installed 0.2.0-rc.2 (the Phase 3 code was not yet
 - **Chat card frame.** A native dnd5e item card is `<div class="chat-card item-card">` with a transparent background and `0px` border; the `dnd5e2` theming class sits on the ancestor `.chat-message`, which Foundry always adds. So `.dnd5e2 .chat-card` scoping reaches our card through its ancestor whether or not we repeat `dnd5e2` on the card div (we do, matching the roadmap note; harmless). Our card renders header, content, bordered meta pills, and a styled 32px footer button consistently with native.
 - **Derivation math** (checked standalone against the rules tables): ladder caps at `unlockedStep(level)` giving step 1 at L1, steps 1-5 at L9, steps 1-9 at L17; Magecraft MP costs `2,3,5,6,7,9,10,11,13`, Arts techniques `1..9`; thresholds fall on steps 3/6/9; Echo reservation `5/10/15/20/25` and Stance hold `1/1/2/2/3` track the level bands. All exact.
 
+## Phase 3 exit-run harness notes (2026-07-22, browser automation via CDP)
+
+Findings about the test harness itself, not the module; they cost real diagnosis time and will bite again.
+
+- **CDP click coordinates are screenshot-space, not page-space.** The extension screenshots at a scaled resolution (1464px and 1512px wide were both observed in one session against a 1920px viewport) and interprets click coordinates in that space. A coordinate computed from `getBoundingClientRect` lands elsewhere: divide page coordinates by `window.innerWidth / screenshotWidth`, and recompute the factor from the dimensions of the most recent screenshot because it changes between captures. Symptom when wrong: the click "fires" but hits a container (event target `.tab-body`), while `elementFromPoint` at the intended page coordinates swears the right element is there.
+- **Synthetic typing reaches `<input>` but not contenteditable.** The extension's type action lands in ordinary inputs (the search bar) but produces nothing inside a ProseMirror `contenteditable`, even when it is focused. Recipe that works and still exercises ProseMirror's real input path: focus the editor, collapse a selection into it, then `document.execCommand("insertText", false, text)` (drives the browser's editing pipeline and PM's beforeinput handling), then click the toolbar's `[data-action="save"]` button. Verified landing in `system.signature`.
+- **The first keystroke after a focusing click can be swallowed** (typed "st" into the search bar, got "t"). Verify the field's value after typing instead of trusting the action result.
+- **Scope row queries to `.veyl-tab`.** `sheet.element.querySelector('[data-item-id="..."]')` can match dnd5e's native row for the same item on the Features or Inventory tab. Those rows carry dnd5e's own `collapsible collapsed` classes, so an unscoped query reads like a broken expansion state (class and Set disagreeing) when both are actually fine.
+
 ---
 
 ## Introspecting dnd5e when the docs run out
