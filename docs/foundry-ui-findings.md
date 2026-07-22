@@ -44,7 +44,7 @@ The exact native structure, which must be copied precisely:
 ```
 
 - **The list is a sibling of `div.middle`, not a child.** `.middle` is a flex row with `item-list-controls { flex: 1 1 0% }`; nesting the list inside it stretches the 41px bar to the full list height and overlaps them.
-- Mounting `dnd5e-inventory` also wires its click delegation: rows with `item-action` classes route to `_onEditItem` and friends by `data-item-id`. This is desirable plumbing, but see Known Incompatibilities for what happens until our item sheets exist.
+- Mounting `dnd5e-inventory` also wires its click delegation, but **only to `.item-action[data-action]` elements and `[data-context-menu]` elements**, bound per-element in `connectedCallback` (verified against the live element's source, 2026-07-22). The `item-action` class alone does nothing: a name div without `data-action` is inert, which is exactly how the tab's rows shipped in rc.1. The action attribute value routes through `_onAction` (`edit`, `use`, `view`, `delete`, `toggleExpand`, ...); `data-action="edit"` on the name div opens the item sheet, and `data-context-menu=""` on the ellipsis button produces dnd5e's full native context menu (View/Edit/Duplicate/Delete/Display in Chat/Favorite), whose Edit entry works on our subtypes.
 
 ### Row conventions
 
@@ -82,6 +82,12 @@ The reliable dispatched-event recipe, verified against sidebar and compendium so
 
 Payload-only drops (setting `text/plain` to `{type: "Item", uuid}` without a dragstart) work only if a previous real dragstart in the same page session left the behavior state set; do not rely on it.
 
+Addendum (Phase 2 exit run, 2026-07-22): a payload-only drop of an actor's own embedded item onto its sheet does route, and dnd5e resolves the locked `"none"` dropEffect as a **copy**, silently duplicating the item on the actor. Check `actor.items` after any synthetic drop test and delete the clones.
+
+## Prose-mirror editors inside custom item sheets (2026-07-22)
+
+dnd5e sizes an open `<prose-mirror>` only inside its own description tab (`prose-mirror[open]` gets `min-height: 150px`, and that tab's `.editor-content` gets `min-height: 300px`). Outside that layout, in our fieldset stacks, the open editor's `.editor-content` computes to 0px height: typing works and saves land, but the text is invisible while editing. Fix (measured, not eyeballed): give `.veyl-item-sheet prose-mirror[open]` the native `min-height: 150px` and let `.editor-content` flex-fill it. Verified live: 150px editor with a 100px visible typing area.
+
 ---
 
 ## Introspecting dnd5e when the docs run out
@@ -97,8 +103,8 @@ Payload-only drops (setting `text/plain` to `{type: "Item", uuid}` without a dra
 
 The custom-subtype architecture (`documentTypes` + `TypeDataModel`) is the right call and passed the load-bearing creation tests, but it has an ecosystem cost. Confirmed so far:
 
-- **dnd5e's default `ItemSheet5e` cannot open our items** (`hasEffects` TypeError in `_configureRenderParts` and `_getTabs`). Any UI path that opens the item, including `dnd5e-inventory` row clicks and the Features pill, hits this until Phase 2 registers dedicated item sheets. Registering our own sheets is the fix, not defensive patches around dnd5e.
-- **Third-party code that iterates `actor.items` assuming pure dnd5e types can throw.** Confirmed with Plutonium's class importer (reads a dnd5e system field on every embedded item; fails on an actor holding framework items, succeeds on a clean one). Workaround: run such imports before granting frameworks. Feature Organizer is the suspected next case; decision scheduled for Phase 2.
+- **dnd5e's default `ItemSheet5e` cannot open our items** (`hasEffects` TypeError in `_configureRenderParts` and `_getTabs`). Resolved in Phase 2 by registering dedicated per-type sheets and unregistering dnd5e's from our types; verified live 2026-07-22 (creation auto-open, pill click, row click, and context-menu Edit all open the Veyl sheets). Registering our own sheets was the fix, not defensive patches around dnd5e.
+- **Third-party code that iterates `actor.items` assuming pure dnd5e types can throw.** Confirmed with Plutonium's class importer (reads a dnd5e system field on every embedded item; fails on an actor holding framework items, succeeds on a clean one). Workaround: run such imports before granting frameworks. Feature Organizer verified compatible live 2026-07-22: its feat guards hold, framework drops on custom categories are rejected, and its `fo-sortable-item` row decoration writes no flags to our items.
 - Pattern for triage when a third-party module breaks on a framework-holding actor: reproduce on a clean actor. Clean actor fails too: not our problem. Clean actor succeeds: log it in the README's known-issues list and manage per-module.
 
 ---
