@@ -9,6 +9,7 @@
 import { FrameworkData, AbilityData } from "./models.mjs";
 import { MODULE_ID, FRAMEWORK_TABS, prepareFrameworkContext } from "./tab.mjs";
 import { onRenderCharacterSheet } from "./pill.mjs";
+import { registerVeylSheets } from "./item-sheets.mjs";
 
 /** Spec's "small verification task": the exact path to the sheet class. */
 const SHEET_CLASS_PATH = "dnd5e.applications.actor.CharacterActorSheet";
@@ -29,7 +30,12 @@ Hooks.once("init", () => {
     [`${MODULE_ID}.ability`]: AbilityData
   });
 
-  // 2. Tab and part registration on the character sheet class.
+  // 2. Dedicated item sheets for both subtypes (Phase 2). Without these,
+  // dnd5e's default ItemSheet5e is the default for our types too and throws
+  // its hasEffects TypeError on open.
+  registerVeylSheets();
+
+  // 3. Tab and part registration on the character sheet class.
   const cls = getCharacterSheetClass();
   if (!cls) {
     console.error(`${MODULE_ID} | CharacterActorSheet not found; framework tabs not registered.`);
@@ -55,7 +61,7 @@ Hooks.once("init", () => {
     };
   }
 
-  // 3. Part context via libWrapper (WRAPPER: we always call the wrapped
+  // 4. Part context via libWrapper (WRAPPER: we always call the wrapped
   // function first, then extend the context for our own partIds).
   libWrapper.register(
     MODULE_ID,
@@ -70,6 +76,6 @@ Hooks.once("init", () => {
     "WRAPPER"
   );
 
-  // 4. Pill injection and tab visibility on every render.
+  // 5. Pill injection and tab visibility on every render.
   Hooks.on("renderCharacterActorSheet", onRenderCharacterSheet);
 });

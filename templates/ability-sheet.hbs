@@ -1,0 +1,197 @@
+{{!--
+  Ability item sheet body: one template for all eight disciplines, branching
+  on the show.* booleans computed per discipline group in item-sheets.mjs.
+  Rich text uses Foundry's toggled prose-mirror exactly as dnd5e wires it
+  (name + value from source, enriched HTML as content); array rows follow
+  dnd5e's uses.recovery pattern (indexed input names, whole-array resubmit).
+--}}
+<div class="veyl-sheet-body">
+
+    <fieldset>
+        <legend>{{localize "VEYL.Sheet.Identity"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.framework"}}</label>
+            <div class="form-fields">
+                <select name="system.framework">
+                    {{selectOptions frameworkOptions selected=source.framework valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.discipline"}}</label>
+            <div class="form-fields">
+                <select name="system.discipline">
+                    {{selectOptions disciplineOptions selected=source.discipline valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+        <p class="hint">{{localize groupHint}}</p>
+
+        {{#if show.activation}}
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.activation"}}</label>
+            <div class="form-fields">
+                <select name="system.activation">
+                    {{selectOptions activationOptions selected=source.activation valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if show.trigger}}
+        <div class="form-group">
+            <label>{{localize "VEYL.Trigger"}}</label>
+            <div class="form-fields">
+                <input type="text" name="system.trigger" value="{{source.trigger}}"
+                       placeholder="{{localize 'VEYL.Hint.trigger'}}">
+            </div>
+        </div>
+        {{/if}}
+
+        {{#if show.duration}}
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.duration"}}</label>
+            <div class="form-fields">
+                <input type="text" name="system.duration" value="{{source.duration}}"
+                       placeholder="{{localize 'VEYL.Hint.duration'}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.concentration"}}</label>
+            <div class="form-fields">
+                <dnd5e-checkbox name="system.concentration" {{checked source.concentration}}></dnd5e-checkbox>
+            </div>
+        </div>
+        {{/if}}
+    </fieldset>
+
+    {{#if show.signature}}
+    <fieldset>
+        <legend>{{localize "VEYL.Field.signature"}}</legend>
+        <p class="hint">{{localize "VEYL.Hint.signature"}}</p>
+        {{#if editable}}
+        <prose-mirror name="system.signature" value="{{source.signature}}"
+                      document-uuid="{{item.uuid}}" toggled>{{{enriched.signature}}}</prose-mirror>
+        {{else}}
+        <div class="editor editor-content">{{{enriched.signature}}}</div>
+        {{/if}}
+    </fieldset>
+    {{/if}}
+
+    {{#if show.baseEffect}}
+    <fieldset>
+        <legend>{{localize "VEYL.Field.baseEffect"}}</legend>
+        {{#if editable}}
+        <prose-mirror name="system.baseEffect" value="{{source.baseEffect}}"
+                      document-uuid="{{item.uuid}}" toggled>{{{enriched.baseEffect}}}</prose-mirror>
+        {{else}}
+        <div class="editor editor-content">{{{enriched.baseEffect}}}</div>
+        {{/if}}
+
+        {{#if show.perStep}}
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.perStep"}}</label>
+            <div class="form-fields">
+                <input type="text" name="system.perStep" value="{{source.perStep}}"
+                       placeholder="{{localize 'VEYL.Hint.perStep'}}">
+            </div>
+        </div>
+        {{/if}}
+    </fieldset>
+    {{/if}}
+
+    {{#if show.evolutions}}
+    <fieldset>
+        <legend>{{localize "VEYL.Sheet.Evolutions"}}</legend>
+        <p class="hint">{{localize "VEYL.Hint.evolutions"}}</p>
+        {{#each evolutionRows}}
+        <div class="veyl-array-row" data-index="{{index}}">
+            <div class="form-group">
+                <label>{{localize "VEYL.Field.threshold"}}</label>
+                <div class="form-fields">
+                    <select name="{{prefix}}threshold">
+                        {{selectOptions @root.thresholdOptions selected=threshold valueAttr="value" labelAttr="label"}}
+                    </select>
+                </div>
+                {{#if @root.editable}}
+                <button type="button" class="unbutton control-button veyl-delete-row" data-action="deleteArrayRow"
+                        data-array="evolutions" data-tooltip aria-label="{{localize 'VEYL.DeleteRow'}}">
+                    <i class="fas fa-trash" inert></i>
+                </button>
+                {{/if}}
+            </div>
+            {{#if @root.editable}}
+            <prose-mirror name="{{prefix}}text" value="{{text}}"
+                          document-uuid="{{@root.item.uuid}}" toggled>{{{enriched}}}</prose-mirror>
+            {{else}}
+            <div class="editor editor-content">{{{enriched}}}</div>
+            {{/if}}
+        </div>
+        {{/each}}
+        {{#if editable}}
+        <button type="button" class="veyl-add-row" data-action="addArrayRow" data-array="evolutions">
+            <i class="fas fa-plus" inert></i> {{localize "VEYL.AddEvolution"}}
+        </button>
+        {{/if}}
+    </fieldset>
+    {{/if}}
+
+    {{#if show.deepenings}}
+    <fieldset>
+        <legend>{{localize "VEYL.Sheet.Deepenings"}}</legend>
+        <p class="hint">{{localize "VEYL.Hint.deepenings"}}</p>
+        {{#each deepeningRows}}
+        <div class="veyl-array-row" data-index="{{index}}">
+            <div class="form-group">
+                <label>{{localize "VEYL.Field.level"}}</label>
+                <div class="form-fields">
+                    <select name="{{prefix}}level">
+                        {{selectOptions @root.levelOptions selected=level valueAttr="value" labelAttr="label"}}
+                    </select>
+                </div>
+                {{#if @root.editable}}
+                <button type="button" class="unbutton control-button veyl-delete-row" data-action="deleteArrayRow"
+                        data-array="deepenings" data-tooltip aria-label="{{localize 'VEYL.DeleteRow'}}">
+                    <i class="fas fa-trash" inert></i>
+                </button>
+                {{/if}}
+            </div>
+            {{#if @root.editable}}
+            <prose-mirror name="{{prefix}}text" value="{{text}}"
+                          document-uuid="{{@root.item.uuid}}" toggled>{{{enriched}}}</prose-mirror>
+            {{else}}
+            <div class="editor editor-content">{{{enriched}}}</div>
+            {{/if}}
+        </div>
+        {{/each}}
+        {{#if editable}}
+        <button type="button" class="veyl-add-row" data-action="addArrayRow" data-array="deepenings">
+            <i class="fas fa-plus" inert></i> {{localize "VEYL.AddDeepening"}}
+        </button>
+        {{/if}}
+    </fieldset>
+    {{/if}}
+
+    {{#if show.amplify}}
+    <fieldset>
+        <legend>{{localize "VEYL.Field.amplify"}}</legend>
+        <p class="hint">{{localize "VEYL.Hint.amplify"}}</p>
+        {{#if editable}}
+        <prose-mirror name="system.amplify" value="{{source.amplify}}"
+                      document-uuid="{{item.uuid}}" toggled>{{{enriched.amplify}}}</prose-mirror>
+        {{else}}
+        <div class="editor editor-content">{{{enriched.amplify}}}</div>
+        {{/if}}
+    </fieldset>
+    {{/if}}
+
+    <div class="form-group">
+        <label>{{localize "VEYL.Field.notes"}}</label>
+        <div class="form-fields">
+            <input type="text" name="system.notes" value="{{source.notes}}">
+        </div>
+    </div>
+
+</div>

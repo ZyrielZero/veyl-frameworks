@@ -1,0 +1,71 @@
+{{!--
+  Identity item sheet body. The header part is dnd5e's own header.hbs and the
+  window chrome comes from ItemSheet5e, so only the body is ours. Form fields
+  use plain name="system.*" inputs: the inherited submitOnChange plumbing
+  writes them back, and .dnd5e2.sheet.item styles the standard form-group
+  markup. Section visibility branches on context booleans computed at render
+  (a select change submits, the item updates, the re-render branches anew).
+--}}
+<div class="veyl-sheet-body">
+
+    <fieldset>
+        <legend>{{localize "VEYL.Sheet.Identity"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.framework"}}</label>
+            <div class="form-fields">
+                <select name="system.framework">
+                    {{selectOptions frameworkOptions selected=source.framework valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.craftName"}}</label>
+            <div class="form-fields">
+                <input type="text" name="system.craftName" value="{{source.craftName}}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.ability"}}</label>
+            <div class="form-fields">
+                <select name="system.ability">
+                    {{selectOptions abilityOptions selected=source.ability valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.sentence"}}</label>
+            <div class="form-fields">
+                <input type="text" name="system.sentence" value="{{source.sentence}}"
+                       placeholder="{{localize 'VEYL.Hint.sentence'}}">
+            </div>
+        </div>
+    </fieldset>
+
+    {{#if isArts}}
+    <fieldset>
+        <legend>{{localize "VEYL.Sheet.Rally"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.rallyBenefit"}}</label>
+            <div class="form-fields">
+                <select name="system.rallyBenefit">
+                    {{selectOptions rallyOptions selected=source.rallyBenefit blank="" valueAttr="value" labelAttr="label"}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "VEYL.Field.rallyDescription"}}</label>
+            <div class="form-fields">
+                <input type="text" name="system.rallyDescription" value="{{source.rallyDescription}}"
+                       placeholder="{{localize 'VEYL.Hint.rallyDescription'}}">
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+</div>
