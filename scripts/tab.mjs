@@ -112,9 +112,11 @@ export function prepareFrameworkContext(sheet, partId) {
           uuid: i.uuid,
           name: i.name,
           img: i.img,
+          // Schema day dropped comparableLevel (CSL is a property of the step
+          // used, not of the technique), so the subtitle is the trigger or blank.
           subtitle: i.system.trigger
             ? `${game.i18n.localize("VEYL.Trigger")}: ${i.system.trigger}`
-            : `${game.i18n.localize("VEYL.CSL")} ${i.system.comparableLevel}`,
+            : "",
           cost: displayCost(d, level),
           time: TIME_ABBR[i.system.activation] ?? i.system.activation
         }))

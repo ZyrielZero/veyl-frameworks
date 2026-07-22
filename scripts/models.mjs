@@ -1,10 +1,11 @@
 /**
  * DataModels for the two custom Item subtypes.
  *
- * These are the SCAFFOLD drafts from the spec. Schema day (Phase 2) walks both
- * rules documents field by field before these are considered final; until then,
- * treat every field here as provisional. They exist now so the subtypes register
- * and the Phase 1 exit test can run.
+ * Finalized on schema day (2026-07-22) against the two rules documents in
+ * docs/rules/. Fields hold only what a player authors when designing an
+ * identity or ability; everything the rules derive from level, modifier, or
+ * proficiency (MP max, DC, attack, costs, holds, Attunement) is computed at
+ * render and never stored (project rule 6).
  */
 
 const fields = foundry.data.fields;
@@ -21,6 +22,12 @@ export const LEGAL_DISCIPLINES = {
   arts: ["stance", "boost", "strike", "apex"]
 };
 
+/** The three Rally benefit options (Arts identity only). */
+export const RALLY_BENEFITS = ["brace", "reposition", "readField"];
+
+/** Levels at which Echoes, Stances, Surges, and Apexes deepen. */
+export const DEEPENING_LEVELS = [10, 15, 20];
+
 /** Identity item: one per framework held ("Magecraft, Severance"). */
 export class FrameworkData extends foundry.abstract.TypeDataModel {
   static defineSchema() {
@@ -35,7 +42,13 @@ export class FrameworkData extends foundry.abstract.TypeDataModel {
         choices: ["int", "wis", "cha", "str", "dex", "con"]
       }),
       // The one-sentence expression of the magic or art (flavor-first anchor).
-      sentence: new fields.StringField({ required: true, initial: "" })
+      sentence: new fields.StringField({ required: true, initial: "" }),
+      // Arts only: the chosen Rally benefit and what the Rally looks like.
+      // Blank on Magecraft identities (Magecraft recovery is rest-based).
+      rallyBenefit: new fields.StringField({
+        required: true, blank: true, initial: "", choices: RALLY_BENEFITS
+      }),
+      rallyDescription: new fields.StringField({ required: true, initial: "" })
     };
   }
 
@@ -60,23 +73,42 @@ export class AbilityData extends foundry.abstract.TypeDataModel {
         required: true, blank: false, initial: "channel",
         choices: [...LEGAL_DISCIPLINES.magecraft, ...LEGAL_DISCIPLINES.arts]
       }),
-      // Augments, Boosts, and Counter triggers.
+      // Named trigger: always for Augments and Boosts; for Channels and
+      // Strikes only when their activation is a reaction (a Counter).
       trigger: new fields.StringField({ required: true, initial: "" }),
+      // Player-chosen only for Channels and Strikes. Rule-fixed elsewhere and
+      // coerced on save by the item sheet: Echo "action", Stance "bonus",
+      // Surge/Apex "action", Augment/Boost "none" (they ride their trigger).
       activation: new fields.StringField({
         required: true, blank: false, initial: "action",
         choices: ["action", "bonus", "reaction", "none"]
       }),
-      // Benchmark bookkeeping (comparable spell level).
-      comparableLevel: new fields.NumberField({
-        required: true, integer: true, min: 0, initial: 0
-      }),
+      // Display-only for now; the engine phase may formalize (rules: any
+      // lasting duration uses standard Concentration, Echo/Stance excepted).
+      duration: new fields.StringField({ required: true, initial: "" }),
+      concentration: new fields.BooleanField({ initial: false }),
+      // The base-step (step 1) effect for Augments/Channels/Boosts/Strikes,
+      // or the base effect of a Surge/Apex. Unused by Echo/Stance.
       baseEffect: new fields.HTMLField({ required: true, initial: "" }),
-      // The per-step scaling line.
+      // The per-step scaling line (Augments/Channels/Boosts/Strikes).
       perStep: new fields.StringField({ required: true, initial: "" }),
-      // The three tier-threshold evolutions.
+      // The up-to-three tier-threshold evolutions (Augments/Channels/Boosts/
+      // Strikes). threshold 1/2/3 = crossing steps 3/6/9 on the progression.
       evolutions: new fields.ArrayField(new fields.SchemaField({
         threshold: new fields.NumberField({
           required: true, integer: true, min: 1, max: 3, initial: 1
+        }),
+        text: new fields.HTMLField({ required: true, initial: "" })
+      })),
+      // Echo/Stance: the Signature, the always-on effect of the player's
+      // design. Attunement is formula-derived and never stored.
+      signature: new fields.HTMLField({ required: true, initial: "" }),
+      // Surge/Apex: what each amplification increment escalates.
+      amplify: new fields.HTMLField({ required: true, initial: "" }),
+      // Echo/Stance/Surge/Apex: the level 10/15/20 Deepening or Mastery text.
+      deepenings: new fields.ArrayField(new fields.SchemaField({
+        level: new fields.NumberField({
+          required: true, integer: true, initial: 10, choices: DEEPENING_LEVELS
         }),
         text: new fields.HTMLField({ required: true, initial: "" })
       })),
