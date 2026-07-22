@@ -70,6 +70,20 @@ Iterating in the running world beats the tag-release-reinstall cycle for UI work
 3. **Verify with the DOM, not the eyes:** bounding rects, computed styles, and dispatching real `input` events to test behavior. A filter "looks like it works" is worth nothing; `filterResult: ["Soulstep"]` is evidence.
 4. Everything is session-local: a refresh reverts to the installed module. Prototype freely, then port the final state into the repo as a patch.
 
+## Testing drag and drop without a mouse (found during the Phase 1 gate run, 2026-07-22)
+
+CDP-driven mouse drags (`left_click_drag`) do not fire HTML5 drag events, and a bare synthetic `drop` dispatch fails for a subtler reason: dnd5e's `_onDropItem` consults `_dropBehavior(event, item)`, which reads the drag session's `dropEffect`. A `DataTransfer` constructed in script has `dropEffect` locked to `"none"` (the setter is inert outside a real drag session), so the handler routes correctly all the way to `_onDropItem` and then silently bails with behavior `"none"`.
+
+The reliable dispatched-event recipe, verified against sidebar and compendium sources:
+
+1. Create one `DataTransfer` and dispatch `dragstart` on the source row (`[data-entry-id]` in the Items directory or an open compendium window). Foundry's own dragstart handler fills the payload, so you also verify the source side for free.
+2. Dispatch `dragover` then `drop` on a **descendant** of the sheet (e.g. the active tab section), sharing the same `DataTransfer`. The drop listener is not on the form root, and `dispatchEvent` propagation never reaches listeners on descendants of the dispatch target, so dispatching on the root silently misses it.
+3. The dragover step is what sets the drop behavior; skipping it resurrects the `"none"` bail.
+
+Payload-only drops (setting `text/plain` to `{type: "Item", uuid}` without a dragstart) work only if a previous real dragstart in the same page session left the behavior state set; do not rely on it.
+
+---
+
 ## Introspecting dnd5e when the docs run out
 
 - `customElements.get("item-list-controls")` gets the class; `Object.getOwnPropertyNames(cls.prototype)` lists its API surface (`list`, `app`, `filters`, `_applyFilters`, ...).
