@@ -4,9 +4,9 @@ Foundry VTT module providing character sheet support for the Magecraft and Arts 
 
 Built against Foundry VTT 13.351 and dnd5e 5.2.4 (2014 ruleset). Requires libWrapper.
 
-## Current phase: 2 (Item Sheets)
+## Current phase: 2 closed, 3 (Tab Interactivity) next
 
-Phase 1 (Scaffold) closed 2026-07-22 with v0.1.0 (gate evidence in docs/gates/phase-1.md). Phase 2 delivers three things: schema day (the DataModel schemas finalized field by field against the rules documents in docs/rules/), dedicated item sheets for both subtypes (subclassing dnd5e's ItemSheet5e, which removes the hasEffects TypeError), and the Feature Organizer compatibility decision (audited: no code change needed, see known issues). Out of scope until later phases: tab content interactivity and search (Phase 3), Arts parity testing (Phase 4), the spend/Burnout engine (its own effort).
+Phase 1 (Scaffold) closed 2026-07-22 with v0.1.0. Phase 2 (Item Sheets) closed 2026-07-22 with v0.2.0: schema day finalized against docs/rules/, dedicated item sheets for both subtypes (removing the hasEffects TypeError), row and context-menu wiring on the framework tabs, and Feature Organizer verified compatible live. Gate evidence for both phases lives in docs/gates/. Phase 3 (tab content interactivity and search) is next; its scope and exit test are not yet defined. Later: Arts parity testing (Phase 4), the spend/Burnout engine (its own effort).
 
 ## Deploying to The Forge
 
@@ -14,20 +14,7 @@ The Forge snapshots module files at install time. Pushing to GitHub does **not**
 
 Test in **Veyl** first. Nothing touches **Taoteti** without explicit go-ahead.
 
-## Phase 2 exit test (run in Veyl)
-
-1. Update the module in the Veyl world; the console is clean at init and `CONFIG.Item.sheetClasses` shows the veyl sheets as per-type defaults.
-2. Create both item types from the Items sidebar. Each sheet opens with no hasEffects TypeError, wearing the native dnd5e chrome: gold border, header with editable image and name, Play/Edit mode slider, no orphaned create-child button.
-3. Play mode disables every field; Edit mode enables them.
-4. Identity sheet: switching framework from magecraft to arts reveals the Rally fieldset and carries the ability across by position (confirm `item.system` in the console, not by eye). Craft name, sentence, and rally fields persist across close and reopen.
-5. Ability sheet: each of the eight disciplines shows exactly its group's sections (Echo/Stance: Signature + Deepenings; Augment/Boost: Trigger, Base Effect, Per Step, Evolutions; Channel/Strike: those plus Activation, with Trigger appearing only on reaction, a Counter; Surge/Apex: Base Effect, Amplify, Deepenings). A framework switch carries the discipline across by position.
-6. Rich text saves land in the right fields: edit Base Effect and Signature via prose-mirror, then verify `item.system.baseEffect` and `.signature` in the console.
-7. Arrays: add three evolutions, fill them, close and reopen, all persist; delete the middle row, the remaining rows keep their data. Repeat for deepenings with the level select.
-8. On an actor holding a framework: clicking an ability row on the tab and clicking the Features pill both open the new sheets (the Phase 1 known issue is gone).
-9. With Feature Organizer enabled on that same actor: the Features tab renders, categories create and delete, dragging a framework item row over a custom category is cleanly rejected, no console errors. Repeat on a clean actor per the triage pattern.
-10. Regression: native dnd5e items (feat, weapon, spell) still open dnd5e's own sheet, and the Phase 1 exit test still passes end to end.
-
-The Phase 1 exit test lives in docs/gates/phase-1.md alongside its gate evidence.
+The Phase 1 and Phase 2 exit tests live in docs/gates/ alongside their gate evidence.
 
 ## Repo layout
 
