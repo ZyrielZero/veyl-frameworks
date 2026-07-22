@@ -84,3 +84,15 @@
 .veyl-item-sheet prose-mirror {
   min-height: 40px;
 }
+
+/* dnd5e sizes the open editor only inside its own description tab, so our
+ * inline editors collapse the content area to 0px while typing. 150px is
+ * dnd5e's measured min-height for an open prose-mirror. */
+.veyl-item-sheet prose-mirror[open] {
+  min-height: 150px;
+}
+
+.veyl-item-sheet prose-mirror[open] .editor-content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
