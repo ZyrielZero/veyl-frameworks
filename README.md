@@ -43,3 +43,8 @@ veyl-frameworks/
   lang/
     en.json
 ```
+
+## Known issues (as of v0.1.0-rc, live-verified 2026-07-21)
+
+- **Opening a framework item throws until Phase 2.** dnd5e's default `ItemSheet5e` reads system fields our subtypes lack (`hasEffects` TypeError). Clicking a tab row or the Features pill hits this. Phase 2 registers proper item sheets for both subtypes, which removes the error.
+- **Third-party modules that iterate `actor.items` can choke on framework items.** Confirmed: Plutonium class import fails on an actor already holding framework items (its importer reads dnd5e system fields on every embedded item) and succeeds on a clean actor. Workaround: run such imports before granting the framework. Suspected same class: Feature Organizer, to be decided during Phase 2 (either it learns to ignore `veyl-frameworks.*` types, or framework items are excluded from its categories). This is an accepted cost of the custom-subtype architecture; new collisions get added here as found.
