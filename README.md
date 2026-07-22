@@ -4,9 +4,9 @@ Foundry VTT module providing character sheet support for the Magecraft and Arts 
 
 Built against Foundry VTT 13.351 and dnd5e 5.2.4 (2014 ruleset). Requires libWrapper.
 
-## Current phase: 1 (Scaffold)
+## Current phase: 2 (Item Sheets)
 
-The scaffold is the container the later phases plug into. In scope now: subtype registration, tab and part registration, tab card with derived stats, pill injection, per-actor visibility. Out of scope until later phases: item sheets (Phase 2), tab content interactivity and search (Phase 3), Arts parity testing (Phase 4), the spend/Burnout engine (its own effort).
+Phase 1 (Scaffold) closed 2026-07-22 with v0.1.0 (gate evidence in docs/gates/phase-1.md). Phase 2 delivers three things: schema day (the DataModel schemas finalized field by field against the rules documents in docs/rules/), dedicated item sheets for both subtypes (subclassing dnd5e's ItemSheet5e, which removes the hasEffects TypeError), and the Feature Organizer compatibility decision (audited: no code change needed, see known issues). Out of scope until later phases: tab content interactivity and search (Phase 3), Arts parity testing (Phase 4), the spend/Burnout engine (its own effort).
 
 ## Deploying to The Forge
 
@@ -14,17 +14,20 @@ The Forge snapshots module files at install time. Pushing to GitHub does **not**
 
 Test in **Veyl** first. Nothing touches **Taoteti** without explicit go-ahead.
 
-## Phase 1 exit test (run in Veyl)
+## Phase 2 exit test (run in Veyl)
 
-1. Install and enable the module (with libWrapper) in the Veyl world.
-2. Open a test character's sheet: no framework tabs, no pill (actor holds nothing).
-3. Create a new Item, type **Framework Identity**, framework `magecraft`, craft name `Severance`, ability `int`. Drag it onto the actor.
-4. Re-open the sheet: the Magecraft tab appears with the stat card (verify MP max, DC, and attack against the formulas by hand), and the Features tab shows the "Magecraft, Severance" pill with the ability abbreviation.
-5. Click the pill: the identity item's sheet opens (default sheet until Phase 2; rough appearance is expected).
-6. Create a **Framework Ability** item (framework `magecraft`, discipline `channel`) and add it to the actor: it appears in the Channels section of the tab.
-7. Confirm both custom-subtype items can be created via the sidebar, via compendium, and via drag onto the actor (early verification of the data architecture's core assumption).
-8. Delete the identity item: tab and pill both vanish. If the tab was open at deletion, the sheet falls back to Details.
-9. Repeat 3-8 with an `arts` identity to confirm the parameterized template serves both.
+1. Update the module in the Veyl world; the console is clean at init and `CONFIG.Item.sheetClasses` shows the veyl sheets as per-type defaults.
+2. Create both item types from the Items sidebar. Each sheet opens with no hasEffects TypeError, wearing the native dnd5e chrome: gold border, header with editable image and name, Play/Edit mode slider, no orphaned create-child button.
+3. Play mode disables every field; Edit mode enables them.
+4. Identity sheet: switching framework from magecraft to arts reveals the Rally fieldset and carries the ability across by position (confirm `item.system` in the console, not by eye). Craft name, sentence, and rally fields persist across close and reopen.
+5. Ability sheet: each of the eight disciplines shows exactly its group's sections (Echo/Stance: Signature + Deepenings; Augment/Boost: Trigger, Base Effect, Per Step, Evolutions; Channel/Strike: those plus Activation, with Trigger appearing only on reaction, a Counter; Surge/Apex: Base Effect, Amplify, Deepenings). A framework switch carries the discipline across by position.
+6. Rich text saves land in the right fields: edit Base Effect and Signature via prose-mirror, then verify `item.system.baseEffect` and `.signature` in the console.
+7. Arrays: add three evolutions, fill them, close and reopen, all persist; delete the middle row, the remaining rows keep their data. Repeat for deepenings with the level select.
+8. On an actor holding a framework: clicking an ability row on the tab and clicking the Features pill both open the new sheets (the Phase 1 known issue is gone).
+9. With Feature Organizer enabled on that same actor: the Features tab renders, categories create and delete, dragging a framework item row over a custom category is cleanly rejected, no console errors. Repeat on a clean actor per the triage pattern.
+10. Regression: native dnd5e items (feat, weapon, spell) still open dnd5e's own sheet, and the Phase 1 exit test still passes end to end.
+
+The Phase 1 exit test lives in docs/gates/phase-1.md alongside its gate evidence.
 
 ## Repo layout
 
@@ -32,19 +35,26 @@ Test in **Veyl** first. Nothing touches **Taoteti** without explicit go-ahead.
 veyl-frameworks/
   module.json          documentTypes, esmodules, styles, relationships
   scripts/
-    main.mjs           init: TABS/PARTS registration, libWrapper wrap, hooks
-    models.mjs         DataModels for framework + ability subtypes (drafts until schema day)
+    main.mjs           init: DataModels, item sheets, TABS/PARTS, libWrapper wrap, hooks
+    models.mjs         DataModels for framework + ability subtypes (finalized on schema day)
+    item-sheets.mjs    dedicated item sheets subclassing dnd5e's ItemSheet5e
     tab.mjs            part context preparation
     pill.mjs           pill injection + per-actor tab visibility
   templates/
     tab.hbs            one parameterized tab (split only if the layouts diverge)
+    framework-sheet.hbs  identity item sheet body
+    ability-sheet.hbs    ability item sheet body (all eight disciplines)
   styles/
     veyl-frameworks.css
   lang/
     en.json
+  docs/
+    rules/             the Magecraft and Arts rules documents (schema day reference)
+    gates/             per-phase gate evidence
 ```
 
-## Known issues (as of v0.1.0-rc, live-verified 2026-07-21)
+## Known issues
 
-- **Opening a framework item throws until Phase 2.** dnd5e's default `ItemSheet5e` reads system fields our subtypes lack (`hasEffects` TypeError). Clicking a tab row or the Features pill hits this. Phase 2 registers proper item sheets for both subtypes, which removes the error.
-- **Third-party modules that iterate `actor.items` can choke on framework items.** Confirmed: Plutonium class import fails on an actor already holding framework items (its importer reads dnd5e system fields on every embedded item) and succeeds on a clean actor. Workaround: run such imports before granting the framework. Suspected same class: Feature Organizer, to be decided during Phase 2 (either it learns to ignore `veyl-frameworks.*` types, or framework items are excluded from its categories). This is an accepted cost of the custom-subtype architecture; new collisions get added here as found.
+- **Opening a framework item throws (`hasEffects` TypeError): resolved in Phase 2.** dnd5e's default `ItemSheet5e` read system metadata our subtypes lack; Phase 2 registers dedicated per-type sheets and unregisters dnd5e's from our types. Pending live verification in Veyl (exit test steps 2 and 8).
+- **Third-party modules that iterate `actor.items` can choke on framework items.** Confirmed: Plutonium class import fails on an actor already holding framework items (its importer reads dnd5e system fields on every embedded item) and succeeds on a clean actor. Workaround: run such imports before granting the framework. This is an accepted cost of the custom-subtype architecture; new collisions get added here as found.
+- **Feature Organizer: audited, no collision.** Source review of v1.0.21 found every `actor.items` iteration guarded by `item.type === "feat"` checks, and its drop handlers reject non-feat items, so framework items are invisible to it by construction. Live verification is exit test step 9; record as verified compatible once it passes.
