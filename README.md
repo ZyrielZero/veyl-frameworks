@@ -4,9 +4,31 @@ Foundry VTT module providing character sheet support for the Magecraft and Arts 
 
 Built against Foundry VTT 13.351 and dnd5e 5.2.4 (2014 ruleset). Requires libWrapper.
 
-## Current phase: 2 closed, 3 (Tab Interactivity) next
+## Current phase: 3 (Tab Interactivity)
 
-Phase 1 (Scaffold) closed 2026-07-22 with v0.1.0. Phase 2 (Item Sheets) closed 2026-07-22 with v0.2.0: schema day finalized against docs/rules/, dedicated item sheets for both subtypes (removing the hasEffects TypeError), row and context-menu wiring on the framework tabs, and Feature Organizer verified compatible live. Gate evidence for both phases lives in docs/gates/. Phase 3 (tab content interactivity and search) is next; its scope and exit test are not yet defined. Later: Arts parity testing (Phase 4), the spend/Burnout engine (its own effort).
+Phase 1 (Scaffold) closed 2026-07-22 with v0.1.0; Phase 2 (Item Sheets) closed 2026-07-22 with v0.2.0 (gate evidence for both in docs/gates/). Phase 3 delivers four things, all display-only:
+
+1. **Row expansion.** In Play mode, clicking an ability row's name toggles an inline derived summary (trigger, activation, duration and concentration, rendered rich text, evolutions with their thresholds, deepenings with their levels, amplify for Surge/Apex). Edit mode keeps opening the sheet; the context menu works in both modes.
+2. **Empowerment ladder.** The expanded row shows the cost ladder from base to the actor's unlocked step only: MP costs for Augments/Channels, techniques spent for Boosts/Strikes, with the tier thresholds (steps 3/6/9) marked and each threshold labeled with the evolution it unlocks. Echo reservation, Stance hold, Surge amplify, and Apex minimum stay on their own fixed displays.
+3. **Chat cards.** A per-row control posts a formatted read-only card (image, name, framework, discipline, cost or step, activation, trigger, duration, rich text). Per the resolution field below, the card carries an Attack roll button (1d20 + prof + ability mod) or a derived Save DC line, or neither.
+4. **Resolution schema addition** (post-schema-day change, walked against both rules documents: no conflict). The ability model gains `resolution` (none / attack / save) and `saveAbility` (used when resolution is save); the ability sheet gains the matching selects.
+
+Out of scope: any live resource state (current MP, ready/spent techniques, Echo/Stance holds, Strain locks, Burnout/Winded), which is the engine effort; Arts parity testing (Phase 4).
+
+## Phase 3 exit test (run in Veyl)
+
+1. Update the module in the Veyl world: console clean at init, and existing ability items load with `resolution` defaulting to none, no validation errors.
+2. Ability sheet: Edit mode shows the Resolution select; choosing Save reveals the save-ability select; both persist across close and reopen; Play mode renders them read-only.
+3. On the tab in Play mode, clicking a row's name toggles the inline summary open and closed without opening a sheet; in Edit mode the same click opens the sheet; the context menu works in both modes.
+4. Expanded summary shows the right content per group for one ability of each of the four groups in each framework, with rich text rendered (no raw HTML).
+5. Empowerment ladder: verify the numbers against the rules tables at actor levels 1, 9, and 17: correct costs (MP or techniques), ladder capped at the unlocked step, thresholds marked with their evolutions.
+6. Fixed costs track the actor's level band: Echo reservation and Stance hold change with level; Surge shows 15 with amplify increments; Apex shows All with its minimum.
+7. Chat cards post correctly for both frameworks: full descriptive content; an Attack button whose roll matches the stat card's bonus when resolution is attack; a Save DC line matching the stat card's DC and naming the save ability when resolution is save; neither when none.
+8. Search: typing filters rows by name across sections and clearing restores them; the search bar has no dead controls (filter/sort either function or are not rendered).
+9. Statelessness: after exercising every feature above, no new values appear in actor or item flags/system; expansion state does not survive a reload; all numbers recompute from level and ability at render.
+10. Regression: the Phase 2 exit test still passes end to end, native dnd5e items are unaffected, and the console stays clean throughout.
+
+The Phase 1 and Phase 2 exit tests live in docs/gates/ alongside their gate evidence.
 
 ## Deploying to The Forge
 
