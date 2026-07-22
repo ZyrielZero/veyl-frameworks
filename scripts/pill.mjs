@@ -11,6 +11,7 @@
  */
 
 import { MODULE_ID, FRAMEWORK_TABS, frameworkItems, identityFor } from "./tab.mjs";
+import { bindTabInteractions } from "./expand.mjs";
 
 const esc = s => Handlebars.escapeExpression(s ?? "");
 
@@ -19,6 +20,7 @@ export function onRenderCharacterSheet(app, element) {
   if (!actor) return;
   injectPills(actor, element);
   enforceTabVisibility(app, actor, element);
+  bindTabInteractions(app, element);
 }
 
 function injectPills(actor, element) {

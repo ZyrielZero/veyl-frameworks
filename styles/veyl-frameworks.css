@@ -39,6 +39,89 @@
   opacity: 0.6;
 }
 
+/* Phase 3: row expansion. Our own collapse classes (veyl-collapsible /
+ * veyl-collapsed) rather than dnd5e's collapsible pair, so dnd5e's own
+ * collapse handling can never double-toggle our rows. */
+
+.veyl-collapsed .veyl-summary {
+  display: none;
+}
+
+.veyl-summary {
+  padding: 4px 12px 10px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-12, 12px);
+}
+
+.veyl-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.veyl-summary .veyl-meta {
+  padding: 2px 8px;
+  border: 1px solid var(--dnd5e-color-gold, #9f9275);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.veyl-summary .veyl-conc {
+  font-style: italic;
+}
+
+.veyl-summary .veyl-summary-text p:last-child,
+.veyl-summary .veyl-inline-rich p:last-child {
+  margin-bottom: 0;
+}
+
+.veyl-ladder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.veyl-ladder-step {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 26px;
+  padding: 2px 4px;
+  border: 1px solid var(--dnd5e-color-gold, #9f9275);
+  border-radius: 3px;
+  line-height: 1.2;
+}
+
+.veyl-ladder-step .step {
+  font-size: var(--font-size-10, 10px);
+  opacity: 0.7;
+}
+
+.veyl-ladder-step .cost {
+  font-weight: bold;
+}
+
+.veyl-ladder-step.veyl-threshold {
+  border-width: 2px;
+  border-color: var(--dnd5e-color-maroon, #6e0000);
+}
+
+.veyl-ladder-unit {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.veyl-line {
+  margin: 0;
+}
+
+.veyl-summary .veyl-fixed {
+  font-style: italic;
+}
+
 /* Phase 2: item sheets. Window chrome, header, form-group, fieldset, and
  * prose-mirror styling all come from dnd5e's .dnd5e2.sheet.item rules (the
  * sheets subclass ItemSheet5e, so those classes are inherited); only layout
