@@ -41,10 +41,23 @@
         {{else}}
         <div class="prepared">
           <span class="label">{{localize "VEYL.ReadyHand"}}</span>
-          <span class="value">{{hand}}</span>
+          <span class="value">{{hand.value}}/{{hand.max}}</span>
         </div>
         {{/if}}
       </div>
+      {{#if rally}}
+      <div class="veyl-rally">
+        <span class="veyl-rally-title">
+          {{localize "VEYL.Sheet.Rally"}}{{#if rally.benefitLabel}}: {{rally.benefitLabel}}{{/if}}
+        </span>
+        <span class="veyl-rally-effect">
+          {{rally.recover}}{{#if rally.effect}}; {{rally.effect}}{{/if}}
+        </span>
+        {{#if rally.description}}
+        <span class="veyl-rally-desc">{{rally.description}}</span>
+        {{/if}}
+      </div>
+      {{/if}}
     </div>
   </section>
 
@@ -99,13 +112,20 @@
               {{#if this.rich}}<div class="veyl-summary-text">{{{this.rich}}}</div>{{/if}}
               {{#if this.ladder}}
               <div class="veyl-ladder" aria-label="{{localize 'VEYL.Summary.Ladder'}}">
+                {{!-- Legend leads so the three rows read as step / cost / comparable
+                      spell level without repeating a unit on every cell. --}}
+                <span class="veyl-ladder-unit">
+                  <span class="step">{{localize "VEYL.Step"}}</span>
+                  <span class="cost">{{this.costUnit}}</span>
+                  <span class="csl">{{localize "VEYL.CSL.Label"}}</span>
+                </span>
                 {{#each this.ladder}}
                 <span class="veyl-ladder-step {{#if this.threshold}}veyl-threshold{{/if}}">
                   <span class="step">{{this.step}}</span>
                   <span class="cost">{{this.cost}}</span>
+                  <span class="csl">{{this.csl}}</span>
                 </span>
                 {{/each}}
-                <span class="veyl-ladder-unit">{{this.costUnit}}</span>
               </div>
               {{#if this.perStep}}
               <p class="veyl-line"><strong>{{localize "VEYL.Field.perStep"}}:</strong> {{this.perStep}}</p>

@@ -65,6 +65,55 @@ export function unlockedStep(level) {
 }
 
 /**
+ * Comparable spell level for a step, the benchmark both rules documents price
+ * every ability against (the two right-hand columns of the step progression).
+ * Augments and Boosts benchmark one level below Channels and Strikes of the
+ * same step: part of their price pays for the action they ride, which bottoms
+ * out at Cantrip on step 1.
+ */
+export function comparableLevel(group, step) {
+  return game.i18n.localize(`VEYL.CSL.${step - (group === "enhance" ? 1 : 0)}`);
+}
+
+/**
+ * Derived Rally display for the Arts identity (the Arts' counterpart to
+ * Magecraft's rest recovery). Every number here recomputes at render per
+ * rule 6: recovery tracks proficiency, and Brace tracks proficiency plus the
+ * Arts modifier.
+ */
+export function buildRally(identity, { actor, prof, mod }) {
+  const benefit = identity.system.rallyBenefit;
+  const rally = {
+    recover: game.i18n.format(
+      prof === 1 ? "VEYL.Rally.RecoverOne" : "VEYL.Rally.RecoverMany", { n: prof }
+    ),
+    benefitLabel: benefit ? game.i18n.localize(`VEYL.Rally.${benefit}`) : "",
+    effect: "",
+    description: identity.system.rallyDescription
+  };
+
+  switch (benefit) {
+    case "brace":
+      // Same base-modifier caveat as the MP formula below: Phase 6 revisits.
+      rally.effect = game.i18n.format("VEYL.Rally.Effect.brace", { n: prof + mod });
+      break;
+    case "reposition": {
+      const movement = actor.system.attributes?.movement ?? {};
+      rally.effect = game.i18n.format("VEYL.Rally.Effect.reposition", {
+        n: Math.floor((movement.walk ?? 0) / 2),
+        units: movement.units ?? "ft"
+      });
+      break;
+    }
+    case "readField":
+      rally.effect = game.i18n.localize("VEYL.Rally.Effect.readField");
+      break;
+  }
+
+  return rally;
+}
+
+/**
  * Derived expansion summary for one ability row (Phase 3). Everything here is
  * recomputed per render from the item and the actor's level (rule 6); the
  * chat card builds on the same context.
@@ -107,6 +156,7 @@ export async function buildAbilitySummary(item, { framework, level }) {
       summary.ladder.push({
         step,
         cost: framework === "magecraft" ? MP_COSTS[step] : step,
+        csl: comparableLevel(group, step),
         threshold: step % 3 === 0
       });
     }
@@ -239,9 +289,14 @@ export async function prepareFrameworkContext(sheet, partId) {
     const techniques = abilityItemsFor(actor, partId).filter(
       i => ["boost", "strike"].includes(i.system.discipline)
     ).length;
-    // Live ready/spent tracking is engine-phase work; the scaffold shows the
-    // hand as techniques known minus the Stance hold for the level band.
-    context.hand = Math.max(0, techniques - stanceHold(level));
+    // Live ready/spent tracking is engine-phase work. The stateless baseline is
+    // nothing spent and no Stance assumed, under which every technique known is
+    // ready, so the hand reads known/known exactly as the pool reads max/max.
+    // The Stance hold is NOT subtracted here: it applies only while the Stance
+    // is active, which is Phase 5 state. It is surfaced honestly on the Stance
+    // row's own summary instead (see buildAbilitySummary).
+    context.hand = { value: techniques, max: techniques };
+    context.rally = buildRally(identity, { actor, prof, mod });
   }
 
   return context;

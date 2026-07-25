@@ -33,6 +33,28 @@
   cursor: pointer;
 }
 
+/* Rally block: the Arts' counterpart to Magecraft's rest recovery, hung under
+ * the stat card's native .info row rather than squeezed into it (the row is
+ * dnd5e's own four-column layout and a fifth column crushes it). */
+.veyl-tab .veyl-rally {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--dnd5e-color-gold, #9f9275);
+  font-size: var(--font-size-11, 11px);
+  text-align: center;
+}
+
+.veyl-tab .veyl-rally-title {
+  font-weight: bold;
+}
+
+.veyl-tab .veyl-rally-desc {
+  font-style: italic;
+  opacity: 0.7;
+}
+
 .veyl-empty .subtitle {
   padding: 6px 12px;
   font-style: italic;
@@ -84,18 +106,28 @@
   gap: 4px;
 }
 
-.veyl-ladder-step {
+/* Each cell stacks three rows: step number, cost, comparable spell level.
+ * The legend cell carries matching padding and a transparent border so its
+ * rows sit on the same baselines as the step cells beside it. */
+.veyl-ladder-step,
+.veyl-ladder-unit {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  min-width: 26px;
+  min-width: 34px;
   padding: 2px 4px;
-  border: 1px solid var(--dnd5e-color-gold, #9f9275);
+  border: 1px solid transparent;
   border-radius: 3px;
   line-height: 1.2;
 }
 
-.veyl-ladder-step .step {
+.veyl-ladder-step {
+  border-color: var(--dnd5e-color-gold, #9f9275);
+}
+
+.veyl-ladder-step .step,
+.veyl-ladder-step .csl,
+.veyl-ladder-unit > span {
   font-size: var(--font-size-10, 10px);
   opacity: 0.7;
 }
@@ -110,8 +142,10 @@
 }
 
 .veyl-ladder-unit {
-  margin-left: 4px;
-  opacity: 0.7;
+  align-items: end;
+  margin-right: 2px;
+  text-align: right;
+  font-style: italic;
 }
 
 .veyl-line {
