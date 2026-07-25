@@ -1,13 +1,16 @@
 /**
  * Post-render DOM work on the character sheet:
  *  1. Inject one identity pill per framework held into the Features page,
- *     styled on the native class pill skeleton (verified by spike).
- *  2. Enforce per-actor tab visibility. TABS/PARTS are class-wide statics, so
+ *     styled on the native class pill skeleton (verified by spike), with a
+ *     context menu carrying the identity's Edit and Delete actions.
+ *  2. Hide framework items from the native Features list, where they otherwise
+ *     land in dnd5e's uncategorized "Other Features" bucket (Phase 4).
+ *  3. Enforce per-actor tab visibility. TABS/PARTS are class-wide statics, so
  *     every sheet renders our parts; sheets for actors that do not hold a
  *     framework get the tab button and section hidden here.
  *
- * Both run from the renderCharacterActorSheet hook, which the spike verified
- * fires reliably and survives re-renders.
+ * All of it runs from the renderCharacterActorSheet hook, which the spike
+ * verified fires reliably and survives re-renders.
  */
 
 import { MODULE_ID, FRAMEWORK_TABS, frameworkItems, identityFor } from "./tab.mjs";
@@ -19,6 +22,8 @@ export function onRenderCharacterSheet(app, element) {
   const actor = app.actor ?? app.document;
   if (!actor) return;
   injectPills(actor, element);
+  bindPillMenu(app, element);
+  hideFrameworkFeatures(actor, element);
   enforceTabVisibility(app, actor, element);
   bindTabInteractions(app, element);
 }
@@ -50,6 +55,82 @@ function injectPills(actor, element) {
     // which is the one place for name, icon, ability, and framework.
     pill.addEventListener("click", () => identity.sheet.render(true));
     pills.append(pill);
+  }
+}
+
+/**
+ * Context menu on the identity pill (Edit / Delete). The pill is the only
+ * handle on the identity item once hideFrameworkFeatures takes its row out of
+ * the Features list, so this is what keeps it reachable.
+ *
+ * Bound through ApplicationV2's own _createContextMenu, which delegates by
+ * selector and therefore survives the pills being rebuilt on every render.
+ * Guarded to bind once per application instance: the root element persists
+ * across partial re-renders, so binding per render would stack duplicates.
+ */
+function bindPillMenu(app, element) {
+  if (app._veylPillMenu || typeof app._createContextMenu !== "function") return;
+  try {
+    app._veylPillMenu = app._createContextMenu(
+      () => pillMenuItems(app), "[data-veyl-pill]",
+      { hookName: "VeylPillContext", parentClassHooks: false, fixed: true }
+    ) ?? true;
+  } catch (err) {
+    console.warn(`${MODULE_ID} | Could not bind the identity pill context menu`, err);
+  }
+}
+
+function pillMenuItems(app) {
+  const identityFrom = target => (app.actor ?? app.document)?.items.get(target.dataset.veylPill);
+  return [
+    {
+      name: "VEYL.Edit",
+      icon: '<i class="fa-solid fa-pen-to-square"></i>',
+      callback: target => identityFrom(target)?.sheet.render(true)
+    },
+    {
+      name: "VEYL.Delete",
+      icon: '<i class="fa-solid fa-trash"></i>',
+      callback: target => identityFrom(target)?.deleteDialog()
+    }
+  ];
+}
+
+/**
+ * Keep our items out of dnd5e's Features list. They have their own tab, and
+ * with no dnd5e feature metadata they fall into the uncategorized "Other
+ * Features" bucket (Phase 2 gate note 3).
+ *
+ * Ability items are hidden only when their framework's identity is held. An
+ * orphaned ability (identity deleted, so its tab is hidden too) stays visible
+ * here, because otherwise it would be reachable from nowhere at all.
+ *
+ * Hide, never remove: same reason as enforceTabVisibility below.
+ */
+function hideFrameworkFeatures(actor, element) {
+  const features = element.querySelector(
+    '[data-application-part="features"], .tab[data-tab="features"]'
+  );
+  if (!features) return;
+
+  const hidden = new Set();
+  for (const item of actor.items) {
+    if (item.type === `${MODULE_ID}.framework`) hidden.add(item.id);
+    else if (item.type === `${MODULE_ID}.ability`
+      && identityFor(actor, item.system.framework)) hidden.add(item.id);
+  }
+
+  for (const section of features.querySelectorAll(".items-section")) {
+    const rows = section.querySelectorAll("li.item[data-item-id]");
+    let hiddenRows = 0;
+    for (const row of rows) {
+      const hide = hidden.has(row.dataset.itemId);
+      row.classList.toggle("veyl-hidden", hide);
+      if (hide) hiddenRows++;
+    }
+    // Only collapse a section we emptied ourselves; dnd5e owns its own empty
+    // sections, and a section that regains a native row must come back.
+    section.classList.toggle("veyl-hidden", rows.length > 0 && hiddenRows === rows.length);
   }
 }
 

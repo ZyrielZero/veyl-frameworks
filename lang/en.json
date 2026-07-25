@@ -88,6 +88,8 @@
   "VEYL.AttackFlavor": "{name}: Attack Roll",
   "VEYL.SaveLine": "Save DC {dc} ({ability})",
   "VEYL.MissingCardItem": "The ability behind this card no longer exists.",
+  "VEYL.Edit": "Edit",
+  "VEYL.Delete": "Delete",
   "VEYL.AddEvolution": "Add Evolution",
   "VEYL.AddDeepening": "Add Deepening",
   "VEYL.DeleteRow": "Delete Row",
