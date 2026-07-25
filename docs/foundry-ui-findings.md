@@ -100,6 +100,17 @@ All verified live against the installed 0.2.0-rc.2 (the Phase 3 code was not yet
 - **Chat card frame.** A native dnd5e item card is `<div class="chat-card item-card">` with a transparent background and `0px` border; the `dnd5e2` theming class sits on the ancestor `.chat-message`, which Foundry always adds. So `.dnd5e2 .chat-card` scoping reaches our card through its ancestor whether or not we repeat `dnd5e2` on the card div (we do, matching the roadmap note; harmless). Our card renders header, content, bordered meta pills, and a styled 32px footer button consistently with native.
 - **Derivation math** (checked standalone against the rules tables): ladder caps at `unlockedStep(level)` giving step 1 at L1, steps 1-5 at L9, steps 1-9 at L17; Magecraft MP costs `2,3,5,6,7,9,10,11,13`, Arts techniques `1..9`; thresholds fall on steps 3/6/9; Echo reservation `5/10/15/20/25` and Stance hold `1/1/2/2/3` track the level bands. All exact.
 
+## Phase 4 exit-run harness notes
+
+From the 2026-07-25 run; companions to the Phase 3 notes below.
+
+1. **Never hand-remove the `#context-menu` element.** Foundry's ContextMenu keeps a reference to it, and deleting the node leaves the menu unable to reopen properly: it reports entries with real geometry while the container measures ~2px tall, and trusted clicks on the entries fall through to whatever is behind. Dismiss the menu with a click elsewhere instead. Two clicks were lost to this before the flow was re-run cleanly.
+2. **A menu opened by a dispatched `contextmenu` event does not accept trusted clicks.** Open it with a real right-click when the entries need clicking; dispatched events are fine for merely reading the entries.
+3. **Our items have rows on two pages.** Every framework and ability item renders both on its framework tab and in dnd5e's Features list, so an unscoped `li.item` query returns Features rows that carry no `.veyl-summary`. Scope to `.veyl-tab` (this is the same lesson as the Phase 3 note below, and it bit again).
+4. **In dnd5e 5.2.4 our items bucket into "Passive Abilities"**, not the "Other Features" section the Phase 2 note named. The Features-page selectors that do work: the page is `[data-application-part="features"]`, sections are `.items-section`, rows are `li.item[data-item-id]`.
+5. **`_createContextMenu` is the right seam for a menu on injected DOM.** It delegates by selector, so it survives the pills being rebuilt every render. Bind it once per application instance (guard on a property of the app): the root element persists across partial re-renders, so binding per render stacks duplicate menus.
+6. **Roll results can land after a 1.5s wait.** A `D20Roll` posted through `D20RollConfigurationDialog` was absent at 1.5s and present later; poll for the message rather than sampling once. Relatedly, a programmatic `.click()` on that dialog's submit button does not submit; use a trusted click.
+
 ## Phase 3 exit-run harness notes (2026-07-22, browser automation via CDP)
 
 Findings about the test harness itself, not the module; they cost real diagnosis time and will bite again.
