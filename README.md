@@ -4,39 +4,36 @@ Foundry VTT module providing character sheet support for the Magecraft and Arts 
 
 Built against Foundry VTT 13.351 and dnd5e 5.2.4 (2014 ruleset). Requires libWrapper.
 
-## Current phase: 3 (Tab Interactivity)
+## Current phase: 4 (Arts Parity and Display Polish)
 
-Phase 1 (Scaffold) closed 2026-07-22 with v0.1.0; Phase 2 (Item Sheets) closed 2026-07-22 with v0.2.0 (gate evidence for both in docs/gates/). Phase 3 delivers four things, all display-only:
+Phases 1 through 3 closed 2026-07-22 with v0.1.0, v0.2.0, and v0.3.0 (gate evidence for all three in docs/gates/). Phase 4 is a consolidation phase: it sweeps the Phase 3 features against the Arts side specifically and clears the cosmetic residue, all still display-only. It adds no schema fields.
 
-1. **Row expansion.** In Play mode, clicking an ability row's name toggles an inline derived summary (trigger, activation, duration and concentration, rendered rich text, evolutions with their thresholds, deepenings with their levels, amplify for Surge/Apex). Edit mode keeps opening the sheet; the context menu works in both modes.
-2. **Empowerment ladder.** The expanded row shows the cost ladder from base to the actor's unlocked step only: MP costs for Augments/Channels, techniques spent for Boosts/Strikes, with the tier thresholds (steps 3/6/9) marked and each threshold labeled with the evolution it unlocks. Echo reservation, Stance hold, Surge amplify, and Apex minimum stay on their own fixed displays.
-3. **Chat cards.** A per-row control posts a formatted read-only card (image, name, framework, discipline, cost or step, activation, trigger, duration, rich text). Per the resolution field below, the card carries an Attack roll button (1d20 + prof + ability mod) or a derived Save DC line, or neither.
-4. **Resolution schema addition** (post-schema-day change, walked against both rules documents: no conflict). The ability model gains `resolution` (none / attack / save) and `saveAbility` (used when resolution is save); the ability sheet gains the matching selects.
+1. **Honest ready hand.** The Arts stat card no longer subtracts the Stance hold from the techniques known. The hold applies only while the Stance is actually assumed, which is live state, so the stateless baseline is nothing spent and no Stance up: every technique known is ready. The card now reads known/known exactly as the Magecraft pool reads max/max, and the hold is surfaced where it belongs, on the Stance row's own summary.
+2. **Rally display.** The Arts identity's Rally (its counterpart to Magecraft's rest recovery) renders on the stat card: the chosen benefit, the derived recovery count (proficiency bonus), the derived effect per benefit (Brace temporary hit points, Reposition distance, Read the Field advantage), and the player's Rally description.
+3. **Comparable spell level on the ladder.** Each empowerment step now shows the benchmark both rules documents price against, discipline-aware: Channels and Strikes 1st through 9th, Augments and Boosts one level lower (Cantrip through 8th).
+4. **Features tab cleanup.** Framework and ability items no longer appear in dnd5e's uncategorized "Other Features" bucket (Phase 2 gate note 3). Ability items whose framework identity is not held stay visible, so an orphan is never reachable from nowhere. The identity pill gains a right-click context menu (Edit, Delete), which keeps the identity reachable now that its Features row is hidden.
 
-Out of scope: any live resource state (current MP, ready/spent techniques, Echo/Stance holds, Strain locks, Burnout/Winded), which is the engine effort; Arts parity testing (Phase 4).
+Out of scope: any live resource state (current MP, ready/spent techniques, Echo/Stance holds, Strain locks, Burnout/Winded), which is Phase 5 onward; marking CSL 6+ steps for Strain, which is Phase 7 enforcement.
 
-## Phase 3 exit test (run in Veyl)
+## Phase 4 exit test (run in Veyl)
 
-1. Update the module in the Veyl world: console clean at init, and existing ability items load with `resolution` defaulting to none, no validation errors.
-2. Ability sheet: Edit mode shows the Resolution select; choosing Save reveals the save-ability select; both persist across close and reopen; Play mode renders them read-only.
-3. On the tab in Play mode, clicking a row's name toggles the inline summary open and closed without opening a sheet; in Edit mode the same click opens the sheet; the context menu works in both modes.
-4. Expanded summary shows the right content per group for one ability of each of the four groups in each framework, with rich text rendered (no raw HTML).
-5. Empowerment ladder: verify the numbers against the rules tables at actor levels 1, 9, and 17: correct costs (MP or techniques), ladder capped at the unlocked step, thresholds marked with their evolutions.
-6. Fixed costs track the actor's level band: Echo reservation and Stance hold change with level; Surge shows 15 with amplify increments; Apex shows All with its minimum.
-7. Chat cards post correctly for both frameworks: full descriptive content; an Attack button whose roll matches the stat card's bonus when resolution is attack; a Save DC line matching the stat card's DC and naming the save ability when resolution is save; neither when none.
-8. Search: typing filters rows by name across sections and clearing restores them; the search bar has no dead controls (filter/sort either function or are not rendered).
-9. Statelessness: after exercising every feature above, no new values appear in actor or item flags/system; expansion state does not survive a reload; all numbers recompute from level and ability at render.
-10. Regression: the Phase 2 exit test still passes end to end, native dnd5e items are unaffected, and the console stays clean throughout.
+1. Update the module in the Veyl world: console clean at init. No schema changed this phase, so a pre-existing ability item's `_source` must be byte-identical before and after the update.
+2. Arts stat card reads N/N techniques, where N is Boosts plus Strikes known, at levels 1, 9, and 17, and does not change when the level band changes the Stance hold. Cross-check on an actor holding a Stance: the card is unaffected while the Stance row's summary still shows the correct hold for the band.
+3. Rally block renders the chosen benefit, the recovery count equal to proficiency bonus, and the right derived number per benefit (Brace = prof + Arts mod temporary hit points; Reposition = half walk speed with units; Read the Field = no number). Verify at two levels so the proficiency-derived numbers move. A blank Rally benefit renders the recovery line alone, with no empty benefit.
+4. Ladder shows the comparable spell level per step in both frameworks, matching the rules tables exactly: Channels and Strikes 1st through 9th, Augments and Boosts Cantrip through 8th. Check at level 17 so all nine steps are visible, and confirm the three-row cells stay legible (measured, not eyeballed).
+5. Framework and ability items no longer appear under Other Features on an actor holding both frameworks; the section itself disappears when they were its only occupants; native feats are untouched and still render there.
+6. An ability item whose framework identity is not held still appears in Other Features, and stops appearing once the identity is granted.
+7. Pill right-click opens a context menu: Edit opens the identity sheet; Delete removes the identity, hides the tab, falls back to Details, and removes the pill, with no console error.
+8. Statelessness: after exercising every feature above, an actor and item `_source` snapshot is byte-identical to one taken before, and no flags are written.
+9. Regression: the Phase 3 exit test still passes end to end, including its Phase 2 regression leg, and the console stays clean throughout.
 
-The Phase 1 and Phase 2 exit tests live in docs/gates/ alongside their gate evidence.
+The Phase 1 through 3 exit tests live in docs/gates/ alongside their gate evidence.
 
 ## Deploying to The Forge
 
 The Forge snapshots module files at install time. Pushing to GitHub does **not** update installed worlds. To deploy: tag a release with a `veyl-frameworks.zip` artifact, then reinstall from the manifest URL. The manifest and download URLs in `module.json` point at tagged release artifacts from day one (lesson carried from Feature Organizer).
 
 Test in **Veyl** first. Nothing touches **Taoteti** without explicit go-ahead.
-
-The Phase 1 and Phase 2 exit tests live in docs/gates/ alongside their gate evidence.
 
 ## Repo layout
 
@@ -47,12 +44,15 @@ veyl-frameworks/
     main.mjs           init: DataModels, item sheets, TABS/PARTS, libWrapper wrap, hooks
     models.mjs         DataModels for framework + ability subtypes (finalized on schema day)
     item-sheets.mjs    dedicated item sheets subclassing dnd5e's ItemSheet5e
-    tab.mjs            part context preparation
-    pill.mjs           pill injection + per-actor tab visibility
+    tab.mjs            part context preparation (all derived values)
+    expand.mjs         delegated tab interactions: row expansion, post control
+    chat.mjs           ability chat cards and the attack roll button
+    pill.mjs           pill injection + context menu, Features hiding, tab visibility
   templates/
     tab.hbs            one parameterized tab (split only if the layouts diverge)
     framework-sheet.hbs  identity item sheet body
     ability-sheet.hbs    ability item sheet body (all eight disciplines)
+    chat-card.hbs        read-only ability chat card
   styles/
     veyl-frameworks.css
   lang/
