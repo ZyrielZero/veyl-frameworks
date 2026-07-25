@@ -148,6 +148,14 @@
   font-style: italic;
 }
 
+/* Measured, not eyeballed (live run 2026-07-25): a step cell's cost row is
+ * 12px/700 and so 14.39px tall, against 12px for the 10px rows. Shrinking the
+ * legend's cost row to 10px left the third row 1.2px out of line, so the
+ * legend's cost row carries the cell's font size and only its weight differs. */
+.veyl-ladder-unit > span.cost {
+  font-size: var(--font-size-12, 12px);
+}
+
 .veyl-line {
   margin: 0;
 }
