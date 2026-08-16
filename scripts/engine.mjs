@@ -498,8 +498,14 @@ function burnoutEffects(actor) {
 export async function sweepCombatExpiry(combat) {
   for (const combatant of combat.combatants) {
     for (const effect of burnoutEffects(combatant.actor)) {
-      const remaining = effect.duration.remaining;
-      if (Number.isFinite(remaining) && remaining <= 0) {
+      // Compute remaining ourselves rather than trusting the prepared
+      // effect.duration.remaining: a combat-round update does not re-prepare
+      // actor effects, so the prepared value is frozen at the last prepare
+      // (same staleness found live on the seconds sweep in the 0.9 gate run).
+      const dur = effect.duration;
+      if (!dur.rounds) continue;
+      const elapsed = Math.max(0, (combat.round ?? 0) - (dur.startRound ?? 0));
+      if (dur.rounds - elapsed <= 0) {
         await deleteEffect(combatant.actor, effect.id);
       }
     }
@@ -554,7 +560,12 @@ export async function sweepWorldTimeExpiry() {
   for (const actor of sweptActors()) {
     for (const effect of burnoutEffects(actor)) {
       if (!effect.duration.seconds) continue;
-      const remaining = effect.duration.remaining;
+      // Compute remaining ourselves: effect.duration.remaining is prepared
+      // data, and nothing re-prepares effects when world time advances, so
+      // it reports the value frozen at the last prepare (found live in the
+      // 0.9 gate run — an expired Burnout survived the sweep).
+      const remaining =
+        (effect.duration.startTime ?? 0) + effect.duration.seconds - game.time.worldTime;
       if (Number.isFinite(remaining) && remaining <= 0) {
         await deleteEffect(actor, effect.id);
       }
