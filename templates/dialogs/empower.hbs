@@ -1,6 +1,9 @@
 {{!-- Empowerment picker content (design §6.3). Fieldset/legend/hint/note
      chrome is native Dialog5e standard-form styling; only the step-option
-     grid rows are ours (styles/veyl-frameworks.css). --}}
+     grid rows are ours (styles/veyl-frameworks.css). Single root element:
+     ApplicationV2 requires each part to render exactly one (found live,
+     0.9.0-rc.1 smoke run). --}}
+<div class="veyl-dialog-content">
 <fieldset>
   <legend>{{localize "VEYL.Empower.Legend"}}</legend>
   <p class="hint">{{localize "VEYL.Empower.Hint" available=mp.available}}</p>
@@ -31,4 +34,5 @@
 {{/if}}
 <div class="note {{#if strainWarning}}warn{{else}}info{{/if}}">
   <p class="hint">{{costPreview}}</p>
+</div>
 </div>

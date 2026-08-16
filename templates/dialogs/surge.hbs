@@ -1,6 +1,9 @@
 {{!-- Surge picker content (design §6.3). Increment rows only reach what the
      pool (plus an offered Echo collapse) can fully fund; the HP-shortfall
-     warning and the Burnout preview always accompany the running total. --}}
+     warning and the Burnout preview always accompany the running total.
+     Single root element: ApplicationV2 requires each part to render exactly
+     one (found live, 0.9.0-rc.1 smoke run). --}}
+<div class="veyl-dialog-content">
 <fieldset>
   <legend>{{localize "VEYL.Surge.Amplify"}}</legend>
   <div class="veyl-step-list">
@@ -37,4 +40,5 @@
     {{mpFromPool}} {{localize "VEYL.MP"}}{{#if mpFreedByCollapse}} ({{localize "VEYL.Surge.InclFreed" mp=mpFreedByCollapse}}){{/if}}{{#if hpCost}} + {{hpCost}} {{localize "VEYL.HP"}}{{/if}}
     &rarr; <strong>{{localize "VEYL.Burnout.Preview" rounds=burnoutRounds}}</strong>
   </p>
+</div>
 </div>

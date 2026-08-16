@@ -96,16 +96,21 @@ Hooks.once("init", () => {
   // the Attunement effect while echoActive stays set, or hand-clear Burnout
   // enforcement. The HUD honors the flag; statuses stay valid for
   // isTemporary/token-icon purposes.
-  CONFIG.statusEffects.push(
-    {
-      id: "veyl-echo", name: "VEYL.Effect.Attunement",
-      img: `modules/${MODULE_ID}/icons/echo.svg`, hud: false
-    },
-    {
-      id: "veyl-burnout", name: "VEYL.Effect.Burnout",
-      img: `modules/${MODULE_ID}/icons/burnout.svg`, hud: false
-    }
-  );
+  // Registered at ready, NOT init: dnd5e rebuilds CONFIG.statusEffects
+  // wholesale during its own setup, silently clobbering init-time pushes
+  // (found live, 0.9.0-rc.1 smoke run).
+  Hooks.once("ready", () => {
+    CONFIG.statusEffects.push(
+      {
+        id: "veyl-echo", name: "VEYL.Effect.Attunement",
+        img: `modules/${MODULE_ID}/icons/echo.svg`, hud: false
+      },
+      {
+        id: "veyl-burnout", name: "VEYL.Effect.Burnout",
+        img: `modules/${MODULE_ID}/icons/burnout.svg`, hud: false
+      }
+    );
+  });
 
   // 8. Magecraft engine hooks (v0.9, design §8). Rest hooks run on the
   // resting client (it owns the actor); the sweeps and cleanup hooks fire on
