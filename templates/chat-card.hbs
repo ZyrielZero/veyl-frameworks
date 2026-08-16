@@ -1,14 +1,78 @@
 {{!--
-  Read-only ability chat card (Phase 3).
+  Ability chat card, one parameterized file, explicitly branched on isUse
+  (design §7.3, feasibility fix F2).
 
-  The dnd5e2 chat-card classes buy the native card styling (dnd5e scopes its
-  chat CSS to them), but none of dnd5e's button wiring is used: our subtypes
-  have no activities, so the attack button carries our own data-action in the
-  veyl namespace and is bound by chat.mjs via the renderChatMessageHTML hook.
-  Every number here was derived at post time; nothing is stored beyond the
-  item uuid pointer in the message flags.
+  Reference cards (the else branch) render the Phase 3 markup byte-identical —
+  the collapse chrome must NOT reach them, or autoCollapseItemCards and the
+  chat-log-wide collapse toggle would start folding existing Phase-3/Arts
+  cards. Only usage "receipt" cards adopt dnd5e's native collapse
+  (description collapsible + details collapsible-content get Item5e's chat
+  listener toggling and autoCollapseItemCards for free) and the native
+  card-buttons div. The dnd5e2 chat-card classes buy the native styling, but
+  none of dnd5e's button wiring is used: buttons carry our own veyl-namespace
+  data-action, bound by chat.mjs via renderChatMessageHTML. Receipt numbers
+  are historical (baked at spend time); roll modifiers are live at click.
 --}}
-<div class="dnd5e2 chat-card veyl-chat-card">
+<div class="dnd5e2 chat-card veyl-chat-card"{{#if isUse}} data-veyl-kind="use"{{/if}}>
+{{#if isUse}}
+    <section class="card-header description collapsible">
+        <header class="summary">
+            <img class="gold-icon" src="{{img}}" alt="{{name}}">
+            <div class="name-stacked border">
+                <span class="title">{{name}}</span>
+                <span class="subtitle">{{subtitle}}</span>
+            </div>
+            <i class="fa-solid fa-chevron-down fa-fw" inert></i>
+        </header>
+        <section class="details collapsible-content card-content">
+            <div class="wrapper">
+                {{#if summary}}
+                <div class="veyl-summary-meta">
+                    {{#if summary.activationLabel}}<span class="veyl-meta">{{summary.activationLabel}}</span>{{/if}}
+                    {{#if summary.trigger}}<span class="veyl-meta">{{localize "VEYL.Trigger"}}: {{summary.trigger}}</span>{{/if}}
+                    {{#if summary.duration}}<span class="veyl-meta">{{summary.duration}}</span>{{/if}}
+                    {{#if summary.concentration}}<span class="veyl-meta veyl-conc">{{localize "VEYL.Field.concentration"}}</span>{{/if}}
+                </div>
+                {{#if summary.rich}}<div class="veyl-summary-text">{{{summary.rich}}}</div>{{/if}}
+                {{#if summary.amplifyRich}}
+                <div class="veyl-line veyl-amplify">
+                    <strong>{{localize "VEYL.Field.amplify"}}:</strong>
+                    <div class="veyl-inline-rich">{{{summary.amplifyRich}}}</div>
+                </div>
+                {{/if}}
+                {{/if}}
+                {{#each crossedEvolutions}}
+                <div class="veyl-line veyl-evolution">
+                    <strong>{{localize "VEYL.ThresholdStep" step=this.step}}:</strong>
+                    <div class="veyl-inline-rich">{{{this.enriched}}}</div>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+    </section>
+    {{#if buttons.length}}
+    <div class="card-buttons">
+        {{#each buttons}}
+        <button type="button" data-action="{{this.action}}"{{#if this.visibility}} data-visibility="{{this.visibility}}"{{/if}}{{#each this.dataset}} data-{{@key}}="{{this}}"{{/each}}>
+            <i class="{{this.icon}}" inert></i>
+            {{#if this.dc}}<span class="visible-dc">{{this.label}} {{localize "VEYL.DC"}} {{this.dc}}</span><span class="hidden-dc">{{this.label}}</span>
+            {{else}}<span>{{this.label}}</span>{{/if}}
+        </button>
+        {{/each}}
+    </div>
+    {{/if}}
+    <p class="supplement"><strong>{{localize "VEYL.Cost"}}:</strong> {{receiptLine}}</p>
+    {{#each supplements}}
+    <p class="supplement {{this.cls}}"><strong>{{this.label}}:</strong> {{this.text}}</p>
+    {{/each}}
+    {{#if pills}}
+    <ul class="card-footer pills unlist">
+        {{#if pills.attuned}}<li class="pill transparent">{{localize "VEYL.Attuned"}}</li>{{/if}}
+        {{#if pills.concentration}}<li class="pill transparent">{{localize "VEYL.Field.concentration"}}</li>{{/if}}
+        {{#if pills.strain}}<li class="pill transparent veyl-strain-pill">{{pills.strain}}</li>{{/if}}
+    </ul>
+    {{/if}}
+{{else}}
     <section class="card-header">
         <header class="summary">
             <img class="gold-icon" src="{{img}}" alt="{{name}}">
@@ -34,6 +98,18 @@
         </div>
         {{/if}}
     </section>
+    {{#if useButton}}
+    {{!-- Owner-only Use launching the picker flow (design §7.3; owner gating
+          comes from dnd5e's _displayChatActionButtons — no data-visibility).
+          The disabled state is a post-time affordability hint only; the click
+          re-validates against live state and toasts when stale. --}}
+    <footer class="card-buttons">
+        <button type="button" data-action="veyl-use" {{#if useButton.disabled}}disabled title="{{useButton.reason}}"{{/if}}>
+            <i class="fa-solid fa-bolt" inert></i>
+            <span>{{localize "VEYL.Use"}}</span>
+        </button>
+    </footer>
+    {{/if}}
     {{#if isAttack}}
     <footer class="card-buttons">
         <button type="button" data-action="veyl-attack">
@@ -47,4 +123,5 @@
         <p class="veyl-save-line">{{saveLine}}</p>
     </footer>
     {{/if}}
+{{/if}}
 </div>

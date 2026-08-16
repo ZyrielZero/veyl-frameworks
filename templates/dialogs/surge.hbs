@@ -1,0 +1,40 @@
+{{!-- Surge picker content (design §6.3). Increment rows only reach what the
+     pool (plus an offered Echo collapse) can fully fund; the HP-shortfall
+     warning and the Burnout preview always accompany the running total. --}}
+<fieldset>
+  <legend>{{localize "VEYL.Surge.Amplify"}}</legend>
+  <div class="veyl-step-list">
+    {{#each options}}
+    <label class="veyl-step-option {{#unless this.legal}}disabled{{/unless}}">
+      <input type="radio" name="increments" value="{{this.n}}"
+             {{#if this.selected}}checked{{/if}} {{#unless this.legal}}disabled{{/unless}}>
+      <span class="step roboto-upper">{{this.totalCost}} {{localize "VEYL.MP"}}</span>
+      <span class="csl">{{this.amplifyLabel}}</span>
+      {{#unless this.legal}}<span class="veyl-why">{{this.blockedLabel}}</span>{{/unless}}
+    </label>
+    {{/each}}
+  </div>
+</fieldset>
+{{#if echo.active}}
+<fieldset>
+  <legend>{{localize "VEYL.Echo.Label"}}</legend>
+  <label class="checkbox">
+    <input type="checkbox" name="collapseFirst" {{#if collapseFirst}}checked{{/if}}>
+    {{localize "VEYL.Surge.CollapseOffer" mp=echo.reserve}}
+  </label>
+  <p class="hint">{{localize "VEYL.Surge.CollapseHint"}}</p>
+</fieldset>
+{{/if}}
+{{#if hpCost}}
+<div class="note warn">
+  <i class="fa-solid fa-heart-crack" inert></i>
+  <p class="hint">{{localize hpWarningKey mp=mpShort hp=hpCost after=hpAfter}}</p>
+</div>
+{{/if}}
+<div class="note info veyl-surge-total">
+  <p class="hint">
+    <strong>{{localize "VEYL.Surge.Total"}}:</strong>
+    {{mpFromPool}} {{localize "VEYL.MP"}}{{#if mpFreedByCollapse}} ({{localize "VEYL.Surge.InclFreed" mp=mpFreedByCollapse}}){{/if}}{{#if hpCost}} + {{hpCost}} {{localize "VEYL.HP"}}{{/if}}
+    &rarr; <strong>{{localize "VEYL.Burnout.Preview" rounds=burnoutRounds}}</strong>
+  </p>
+</div>

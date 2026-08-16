@@ -36,7 +36,7 @@
         {{#if mp}}
         <div class="prepared">
           <span class="label">{{localize "VEYL.Mana"}}</span>
-          <span class="value">{{mp.value}}/{{mp.max}}</span>
+          <span class="value">{{mp.available}}/{{mp.max}}</span>
         </div>
         {{else}}
         <div class="prepared">
@@ -45,6 +45,52 @@
         </div>
         {{/if}}
       </div>
+      {{#if mp}}
+      {{!-- v0.9 live MP meter (design §6.1): the native dnd5e meter pattern.
+            Bar fill shows current (mana that exists), label shows available
+            (what you can spend), and the .tmp badge (Temp-HP slot reused
+            read-only) reconciles the two while the Echo reserves MP. The
+            input carries NO name on purpose: the sheet form belongs to the
+            actor, our value lives on the identity item, and a delegated
+            change handler in expand.mjs replicates the delta semantics. --}}
+      <div class="meter-group veyl-mp-group">
+        <div class="meter sectioned veyl-mana">
+          <div class="progress veyl-mana" role="meter" aria-valuemin="0"
+               aria-valuenow="{{mp.current}}" aria-valuemax="{{mp.max}}"
+               style="--bar-percentage: {{mp.pct}}%" data-veyl-mp-meter="">
+            <div class="label">
+              <span class="value">{{mp.available}}</span>
+              <span class="separator">&sol;</span>
+              <span class="max">{{mp.max}}</span>
+            </div>
+            <input type="text" data-veyl-mp-input="" data-dtype="Number"
+                   inputmode="numeric" pattern="[+=\-]?\d*" value="{{mp.available}}" hidden>
+          </div>
+          {{#if mp.reserved}}
+          <div class="tmp veyl-reserved" data-tooltip aria-label="{{localize 'VEYL.Reserved.Tooltip'}}">
+            <span class="value">{{mp.reserved}}</span>
+          </div>
+          {{/if}}
+        </div>
+        <div class="veyl-status">
+          {{#with echo}}
+          <label class="veyl-echo-toggle {{#if this.blocked}}veyl-blocked{{/if}}">
+            <slide-toggle data-veyl-echo-toggle="" {{#if this.active}}checked{{/if}}
+                          {{#if this.blocked}}disabled{{/if}}></slide-toggle>
+            <span class="roboto-condensed-upper">{{localize "VEYL.Echo.Toggle"}}</span>
+            <span class="veyl-reserve-note">{{localize "VEYL.Echo.Reserves" mp=this.reserve}}</span>
+          </label>
+          {{/with}}
+          {{#if burnout}}
+          <div class="veyl-burnout" role="status">
+            <i class="fa-solid fa-fire" inert></i>
+            <span class="roboto-condensed-upper">{{localize "VEYL.Burnout.Label"}}</span>
+            <span class="value">{{burnout.remaining}}</span>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+      {{/if}}
       {{#if rally}}
       <div class="veyl-rally">
         <span class="veyl-rally-title">
@@ -76,7 +122,7 @@
         </div>
         <ol class="item-list unlist">
           {{#each this.items}}
-          <li class="item veyl-collapsible {{#unless this.expanded}}veyl-collapsed{{/unless}}" data-item-id="{{this.id}}" data-entry-id="{{this.id}}" data-item-name="{{this.name}}" data-uuid="{{this.uuid}}">
+          <li class="item veyl-collapsible {{#unless this.expanded}}veyl-collapsed{{/unless}} {{#if this.usable.blocked}}veyl-unusable{{/if}}" data-item-id="{{this.id}}" data-entry-id="{{this.id}}" data-item-name="{{this.name}}" data-uuid="{{this.uuid}}">
             <div class="item-row draggable">
               {{!-- dnd5e-inventory binds clicks only to .item-action[data-action] and
                     [data-context-menu]. In Edit mode the name keeps dnd5e's edit
@@ -93,6 +139,16 @@
               <div class="item-detail veyl-col">{{this.cost}}</div>
               <div class="item-detail veyl-col"><span class="condensed">{{this.time}}</span></div>
               <div class="item-detail item-controls always-visible veyl-col">
+                {{#if this.usable}}
+                {{!-- v0.9 Use control (design §6.2). Disabled states are
+                      advisory; the engine re-validates at click time. On an
+                      active Echo the control is Collapse instead. --}}
+                <button type="button" class="unbutton item-control always-interactive veyl-use"
+                        data-veyl-use="" {{#if this.usable.blocked}}disabled aria-disabled="true"{{/if}}
+                        data-tooltip aria-label="{{this.usable.label}}">
+                  <i class="fa-solid {{this.usable.icon}}" inert></i>
+                </button>
+                {{/if}}
                 <button type="button" class="unbutton item-control always-interactive" data-veyl-post="" data-tooltip aria-label="{{localize 'VEYL.PostToChat'}}">
                   <i class="fa-solid fa-comment-alt"></i>
                 </button>
@@ -120,7 +176,7 @@
                   <span class="csl">{{localize "VEYL.CSL.Label"}}</span>
                 </span>
                 {{#each this.ladder}}
-                <span class="veyl-ladder-step {{#if this.threshold}}veyl-threshold{{/if}}">
+                <span class="veyl-ladder-step {{#if this.threshold}}veyl-threshold{{/if}} {{#if this.locked}}veyl-strain-locked{{/if}}">
                   <span class="step">{{this.step}}</span>
                   <span class="cost">{{this.cost}}</span>
                   <span class="csl">{{this.csl}}</span>

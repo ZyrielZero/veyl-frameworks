@@ -1,0 +1,55 @@
+# Release pipeline (design-magecraft-0.9.md §11, plan-1.0.md M0 item 2).
+#
+# On push of a tag `v*`: rewrite module.json's version/download for the tag,
+# zip ONLY the module runtime files, and publish a GitHub release with both
+# module.json and veyl-frameworks.zip attached. The stable manifest URL
+# (releases/latest/download/module.json) keeps working because every release
+# — rc tags included — is published as a full release, never a prerelease:
+# The Forge reinstall-from-manifest cadence (house rule) depends on `latest`
+# tracking the newest tag.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version = tag minus the leading "v"; download = this tag's own
+      # release asset URL (the `latest` alias is reserved for the manifest,
+      # so an installed manifest always downloads the matching zip).
+      - name: Rewrite module.json version and download for the tag
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          VERSION="${TAG#v}"
+          DOWNLOAD="https://github.com/${REPO}/releases/download/${TAG}/veyl-frameworks.zip"
+          jq --arg version "$VERSION" --arg download "$DOWNLOAD" \
+            '.version = $version | .download = $download' \
+            module.json > module.json.tmp
+          mv module.json.tmp module.json
+
+      # Runtime files only: no docs/, no .git*, no .github/, no handoff.md.
+      # icons/ ships as of 0.9 (design §11 file list); the conditional stays
+      # so older tags without it still build.
+      - name: Build veyl-frameworks.zip
+        run: |
+          INCLUDE="module.json scripts templates styles lang"
+          if [ -d icons ]; then INCLUDE="$INCLUDE icons"; fi
+          zip -r veyl-frameworks.zip $INCLUDE
+
+      - name: Create release with module.json and zip attached
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            module.json
+            veyl-frameworks.zip

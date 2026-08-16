@@ -5,7 +5,10 @@
  * docs/rules/. Fields hold only what a player authors when designing an
  * identity or ability; everything the rules derive from level, modifier, or
  * proficiency (MP max, DC, attack, costs, holds, Attunement) is computed at
- * render and never stored (project rule 6).
+ * render and never stored (project rule 6). One exception since the v0.9
+ * engine: spent MP and its live companions (Echo up, Strain locks, the
+ * short-rest flag) are not derivable from anything, so FrameworkData stores
+ * that spend state — everything computable stays derived.
  */
 
 const fields = foundry.data.fields;
@@ -43,6 +46,39 @@ export const DISCIPLINE_GROUPS = {
 /** Evolution threshold ordinal (1/2/3) to the step it crosses (3/6/9). */
 export const THRESHOLD_STEPS = { 1: 3, 2: 6, 3: 9 };
 
+/**
+ * MP cost by step on the Magecraft cost progression (the rules table in
+ * docs/rules/magecraft.md). Arts spend techniques equal to the step number,
+ * so they need no table. Lives here (with echoReserve, unlockedStep, and
+ * comparableLevelNumber) so engine.mjs and tab.mjs both import downward from
+ * the model layer — never from each other.
+ */
+export const MP_COSTS = { 1: 2, 2: 3, 3: 5, 4: 6, 5: 7, 6: 9, 7: 10, 8: 11, 9: 13 };
+
+/** Echo reservation by level band (per the Magecraft reservation table). */
+export function echoReserve(level) {
+  if (level >= 20) return 25;
+  if (level >= 15) return 20;
+  if (level >= 10) return 15;
+  if (level >= 5) return 10;
+  return 5;
+}
+
+/** Highest unlocked step by character level (steps unlock at 1,3,5,...,17). */
+export function unlockedStep(level) {
+  return Math.min(9, Math.floor((level + 1) / 2));
+}
+
+/**
+ * Numeric comparable spell level for a step (0 = cantrip): Channels and
+ * Strikes at step N benchmark level N; Augments and Boosts one level below
+ * (part of their price pays for the action they ride). tab.mjs
+ * comparableLevel() returns a LOCALIZED STRING — engine math must not use it.
+ */
+export function comparableLevelNumber(group, step) {
+  return step - (group === "enhance" ? 1 : 0);
+}
+
 /** How an ability resolves when used: no roll, an attack roll, or a save. */
 export const RESOLUTIONS = ["none", "attack", "save"];
 
@@ -69,7 +105,24 @@ export class FrameworkData extends foundry.abstract.TypeDataModel {
       rallyBenefit: new fields.StringField({
         required: true, blank: true, initial: "", choices: RALLY_BENEFITS
       }),
-      rallyDescription: new fields.StringField({ required: true, initial: "" })
+      rallyDescription: new fields.StringField({ required: true, initial: "" }),
+      // --- v0.9 live-state fields (Magecraft engine; Arts leaves defaults). ---
+      // Exception to the header rule: spent MP is not derivable, so it is stored.
+      // Everything computable (max MP, reserve amount, DC, Attunement bonus)
+      // stays derived. null = "uninitialized, treat as max": a fresh identity
+      // starts full without a write, and level-up max changes never strand it.
+      currentMP: new fields.NumberField({
+        required: true, integer: true, min: 0, nullable: true, initial: null
+      }),
+      echoActive: new fields.BooleanField({ initial: false }),
+      // Item id of the ability item whose Echo is up (label/collapse robustness).
+      echoItemId: new fields.StringField({ required: true, initial: "" }),
+      shortRestUsed: new fields.BooleanField({ initial: false }),
+      // Comparable spell levels (6-9) locked by Strain until long rest; shared
+      // across Augments and Channels, so the number alone is the key.
+      strainLocks: new fields.ArrayField(
+        new fields.NumberField({ required: true, integer: true, min: 6, max: 9 })
+      )
     };
   }
 

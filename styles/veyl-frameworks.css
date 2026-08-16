@@ -202,6 +202,12 @@
   font-weight: bold;
 }
 
+/* v0.9 §7.6: warn-styled receipt supplements (Strain lock, Burnout). The
+ * base .supplement chrome is dnd5e's; only the warn coloring is ours. */
+.veyl-chat-card .supplement.veyl-warn {
+  color: var(--dnd5e-color-maroon, #6e0000);
+}
+
 /* Phase 2: item sheets. Window chrome, header, form-group, fieldset, and
  * prose-mirror styling all come from dnd5e's .dnd5e2.sheet.item rules (the
  * sheets subclass ItemSheet5e, so those classes are inherited); only layout
@@ -258,4 +264,158 @@
 .veyl-item-sheet prose-mirror[open] .editor-content {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* v0.9 §6.5: live MP meter, Echo toggle, Burnout pill, use controls. Only
+ * what the native .dnd5e2 classes don't cover. Load-bearing replication
+ * (design feasibility review): dnd5e keys the meter's layout to
+ * .meter.sectioned > .hit-points (flex/position/cursor, dnd5e.css:7603) and
+ * colors .tmp > input (:7616) — we use .progress and a read-only span, so
+ * those rules must be carried explicitly or the bar neither stretches nor
+ * takes the click. */
+
+.veyl-tab {
+  --veyl-color-mp-1: #24408f;
+  --veyl-color-mp-2: #3f6ec4;
+  --veyl-color-mp-3: #7aa4e8;
+}
+
+.veyl-tab .meter.veyl-mana {
+  height: 25px;
+  font-size: var(--font-size-14, 14px);
+}
+
+.veyl-tab .meter.veyl-mana > .progress {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.veyl-tab .meter.veyl-mana > .progress > input {
+  position: relative;
+}
+
+.veyl-tab .meter.veyl-mana .progress::before {
+  background: linear-gradient(to right, var(--veyl-color-mp-1) 0%, var(--veyl-color-mp-2) 100%);
+  border-inline-end: var(--border-width) solid var(--veyl-color-mp-3);
+}
+
+.veyl-tab .meter.veyl-mana > .tmp.veyl-reserved {
+  display: grid;
+  place-content: center;
+}
+
+.veyl-tab .tmp.veyl-reserved .value {
+  color: var(--dnd5e-color-gold, #9f9275);
+  font-weight: bold;
+}
+
+.veyl-tab .veyl-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px 0;
+  font-size: var(--font-size-11, 11px);
+}
+
+.veyl-tab .veyl-echo-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.veyl-tab .veyl-echo-toggle.veyl-blocked {
+  opacity: 0.5;
+}
+
+.veyl-tab .veyl-reserve-note {
+  opacity: 0.7;
+}
+
+.veyl-tab .veyl-burnout {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--dnd5e-color-maroon, #6e0000);
+  color: var(--color-text-light-0, #f4f4f4);
+}
+
+/* pointer-events off on the icon only, so data-tooltip on the disabled
+ * button itself still fires the blocked reason. */
+.veyl-tab .veyl-use:disabled {
+  opacity: 0.4;
+}
+
+.veyl-tab .veyl-use:disabled > i {
+  pointer-events: none;
+}
+
+.veyl-tab .veyl-unusable .veyl-col {
+  opacity: 0.4;
+}
+
+.veyl-tab .veyl-ladder-step.veyl-strain-locked {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+/* Empowerment / Surge picker rows (dialogs land with use.mjs; the dialogs
+ * are Dialog5e subclasses, so fieldset/footer/notes chrome is native). */
+.veyl-empower .veyl-step-option,
+.veyl-surge .veyl-step-option {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content max-content;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.veyl-empower .veyl-step-option.disabled,
+.veyl-surge .veyl-step-option.disabled {
+  opacity: 0.5;
+}
+
+.veyl-empower .veyl-step-option.veyl-threshold,
+.veyl-surge .veyl-step-option.veyl-threshold {
+  box-shadow: inset 0 0 0 1px var(--dnd5e-color-gold, #9f9275);
+}
+
+.veyl-empower .veyl-why,
+.veyl-surge .veyl-why {
+  color: var(--dnd5e-color-maroon, #6e0000);
+  font-size: var(--font-size-10, 10px);
+}
+
+/* Picker dialog additions (the grid rows above shipped with the tab work):
+ * selected-row highlight, list rhythm, and the checkbox/hint spacing native
+ * standard-form does not give a bare label. */
+.veyl-empower .veyl-step-list,
+.veyl-surge .veyl-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.veyl-empower .veyl-step-option:has(input:checked),
+.veyl-surge .veyl-step-option:has(input:checked) {
+  background: var(--dnd5e-color-parchment, rgb(0 0 0 / 10%));
+  box-shadow: inset 0 0 0 1px var(--dnd5e-color-gold, #9f9275);
+}
+
+.veyl-empower .veyl-step-option input[type="radio"],
+.veyl-surge .veyl-step-option input[type="radio"] {
+  margin: 0;
+}
+
+.veyl-surge label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }

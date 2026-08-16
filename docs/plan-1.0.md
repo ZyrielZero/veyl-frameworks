@@ -35,15 +35,24 @@ this repo, run both frameworks at the table end to end:
 
 ## Milestone map
 
-| Milestone | Version | Absorbs roadmap phases | Risk carried |
-| --- | --- | --- | --- |
-| M0: Close-out + infrastructure | v0.4.0 | Phase 4 tail | none |
-| M1: State engine + basic rests | v0.5.0 | Phase 5, most of Phase 8 | state correctness, migration |
-| M2: Attunement | v0.6.0 | Phase 6 | actor-wide score modification |
-| M3: Use-time integration | v0.7.0 | Phase 7 + Strain-clearing rest tail | workflow correctness, timed conditions |
-| M4: Release | v1.0.0 | Phase 9 | packaging only |
+> **Revised 2026-08-16.** The v0.9 re-scope
+> (`docs/design-magecraft-0.9.md` §12) supersedes M1–M3 below: the plan's
+> framework axis inverts from "both frameworks per layer" to "all layers
+> Magecraft, then all layers Arts." The M1–M3 sections that follow are kept
+> as reference for the layer-by-layer designs they contain, but their
+> version numbers and both-framework scope no longer govern; the design
+> document is authoritative for 0.9.
 
-M2's spike runs in parallel with M1's build (see M2). Everything else is
+| Milestone | Version | Was | Now |
+| --- | --- | --- | --- |
+| M0: Close-out + infrastructure | v0.4.0 | unchanged | unchanged; release workflow now load-bearing for the rc cadence; add local dnd5e 5.2.x update |
+| M1 → 9a Magecraft engine | v0.9.0-rc.1 | both-framework state | Magecraft state + rests only; Arts fields (`stanceActive`, `heldTechniqueIds`, `spentTechniqueIds`) deferred, schema shape frozen in plan text |
+| M2 → 9b Attunement | v0.9.0-rc.2 | M2 | Con adept HP carve-out spike deleted from 0.9 (Con is Arts-only); spike reduces to ASI + manual-edit policy |
+| M3 → 9c Use-time | v0.9.0-rc.3 | M3 A+B both frameworks | Magecraft only: cards-that-spend, empowerment, Surge/HP, Strain, Burnout. Apex/Winded/technique-spend moves to 1.0 |
+| 0.9 release | v0.9.0 | (didn't exist) | full design §10 gate; user-facing Magecraft-only release; README states Arts is display-only pending rules |
+| M4 → 1.0 Arts parity | v1.0.0 | M4 = packaging | absorbs: Arts rules freeze (external gate — blocked on design, not code), Arts state fields + Stance/Rally/breather, Arts Attunement with the Con adept HP carve-out spike, Apex + Winded, Arts cards, then old M4 tail: compendia, user guide, LICENSE check, cumulative Phase 1–9 regression, Taoteti conversation |
+
+The 9b spike runs in parallel with 9a's build (see M2). Everything else is
 sequential because each milestone consumes the previous one's state.
 
 The Forge constraint stands: every milestone gate runs against a tagged rc

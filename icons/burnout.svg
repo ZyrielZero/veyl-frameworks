@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Burnout: a guttering flame (monochrome white, matching core
+       status-icon convention). -->
+  <g fill="#fff">
+    <path d="M50 8 C46 26 30 32 30 54 a20 20 0 0 0 40 0 C70 32 54 26 50 8 Z
+             M50 88 a14 14 0 0 1 -14 -14 c0 -12 9 -16 14 -26 c5 10 14 14 14 26
+             a14 14 0 0 1 -14 14 Z" fill-rule="evenodd"/>
+    <rect x="22" y="86" width="56" height="6" rx="3" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+{{!-- Empowerment picker content (design §6.3). Fieldset/legend/hint/note
+     chrome is native Dialog5e standard-form styling; only the step-option
+     grid rows are ours (styles/veyl-frameworks.css). --}}
+<fieldset>
+  <legend>{{localize "VEYL.Empower.Legend"}}</legend>
+  <p class="hint">{{localize "VEYL.Empower.Hint" available=mp.available}}</p>
+  <div class="veyl-step-list">
+    {{#each steps}}
+    <label class="veyl-step-option {{#unless this.selectable}}disabled{{/unless}}
+                  {{#if this.threshold}}veyl-threshold{{/if}}">
+      <input type="radio" name="step" value="{{this.step}}"
+             {{#if this.selected}}checked{{/if}} {{#unless this.selectable}}disabled{{/unless}}>
+      <span class="step roboto-upper">{{localize "VEYL.Step"}} {{this.step}}</span>
+      <span class="cost">{{this.cost}} {{localize "VEYL.MP"}}</span>
+      <span class="csl">{{this.csl}}</span>
+      {{#unless this.selectable}}<span class="veyl-why">{{this.blockedLabel}}</span>{{/unless}}
+    </label>
+    {{/each}}
+  </div>
+</fieldset>
+{{#if evolutionPreview.length}}
+<fieldset>
+  <legend>{{localize "VEYL.Empower.Evolutions"}}</legend>
+  {{#each evolutionPreview}}
+  <div class="note info">
+    <i class="fa-solid fa-arrow-up-right-dots" inert></i>
+    <p class="hint"><strong>{{localize "VEYL.ThresholdStep" step=this.step}}:</strong> {{{this.enriched}}}</p>
+  </div>
+  {{/each}}
+</fieldset>
+{{/if}}
+<div class="note {{#if strainWarning}}warn{{else}}info{{/if}}">
+  <p class="hint">{{costPreview}}</p>
+</div>
